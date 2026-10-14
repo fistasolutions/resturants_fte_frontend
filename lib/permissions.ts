@@ -1,0 +1,75 @@
+/**
+ * The permission catalogue (frontend SPEC-358) — the backend's `services/access/catalogue.py`
+ * keys and labels, pinned. Every role check on a screen names one of these; a typo fails `tsc`
+ * and `tests/role-gate-coverage.test.ts`. A new backend permission is one row here.
+ */
+export const PERMISSION_LABELS = {
+  "dashboard.view": "See the dashboard",
+  "brief.view": "See the brief",
+  "brief.manage": "Act on the brief",
+  "chat.use": "Ask Glisp",
+  "reports.view": "See reports",
+  "reports.manage": "Generate reports",
+  "orders.view": "See orders",
+  "products.view": "See products",
+  "products.manage": "Edit product costs",
+  "customers.view": "See customers",
+  "discounts.view": "See discounts",
+  "discounts.manage": "Manage discounts",
+  "results.view": "See results",
+  "foresight.view": "See foresight",
+  "foresight.manage": "Run forecasts",
+  "inventory.view": "See inventory",
+  "returns.view": "See returns",
+  "warehouse.view": "See the warehouse",
+  "warehouse.manage": "Manage the warehouse",
+  "traffic.view": "See store traffic",
+  "traffic.manage": "Manage store traffic",
+  "team_performance.view": "See team performance",
+  "team_performance.manage": "Manage team performance",
+  "social.view": "See social",
+  "social.manage": "Create social content",
+  "social.publish": "Publish social posts",
+  "spotlight.view": "See Search Visibility",
+  "spotlight.manage": "Write with Search Visibility",
+  "spotlight.publish": "Publish articles",
+  "brand_brain.view": "See the Brand Brain",
+  "brand_brain.manage": "Edit the Brand Brain",
+  "ads.view": "See ads",
+  "ads.manage": "Manage ads",
+  "ads.approve": "Approve ad spend",
+  "email_marketing.view": "See email marketing",
+  "email_marketing.manage": "Build email marketing",
+  "email_marketing.send": "Send email marketing",
+  "finance.view": "See finance",
+  "finance.manage": "Manage finance",
+  "tax_reports.view": "See tax reports",
+  "tax_reports.manage": "Manage tax reports",
+  "report_fte.view": "See Report Builder",
+  "report_fte.manage": "Work with Report Builder",
+  "ai.view": "See AI performance",
+  "ai.manage": "Manage AI",
+  "system.view": "See the system",
+  "ci.view": "See Continuous Innovation",
+  "ci.manage": "Decide on plans",
+  "integrations.view": "See integrations",
+  "integrations.manage": "Manage integrations",
+  "settings.view": "See settings",
+  "settings.manage": "Change settings",
+  "team.view": "See the team",
+  "team.manage": "Manage the team",
+  "roles.manage": "Manage roles",
+  "billing.view": "See billing",
+  "billing.manage": "Manage billing",
+  "audit.view": "See the audit log",
+  "messages.send": "Send emails",
+  "data.export": "Export data",
+} as const;
+
+export type Permission = keyof typeof PERMISSION_LABELS;
+
+export const PERMISSIONS = Object.keys(PERMISSION_LABELS) as Permission[];
+
+export function isPermission(value: string): value is Permission {
+  return Object.hasOwn(PERMISSION_LABELS, value);
+}
