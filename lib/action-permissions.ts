@@ -225,6 +225,23 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "report-fte-actions:setScheduleAuthority": ["report_fte.manage"],
   // services/report-schedule.ts
   "report-schedule:updateReportSchedule": ["settings.manage"],
+  // services/restaurant-actions.ts (SPEC-377; backend SPEC-387/388 route policy)
+  "restaurant-actions:createBranch": ["network.manage"],
+  "restaurant-actions:createFranchiseRole": ["franchise_team.manage"],
+  "restaurant-actions:createFranchisee": ["network.manage"],
+  "restaurant-actions:createIngestKey": ["restaurant_data.manage"],
+  "restaurant-actions:createRegion": ["network.manage"],
+  "restaurant-actions:deleteFranchiseRole": ["franchise_team.manage"],
+  "restaurant-actions:deleteRegion": ["network.manage"],
+  "restaurant-actions:importBranches": ["network.manage"],
+  "restaurant-actions:importRestaurantFile": ["restaurant_data.manage"],
+  "restaurant-actions:inviteToFranchise": ["franchise_team.manage"],
+  "restaurant-actions:renameRegion": ["network.manage"],
+  "restaurant-actions:revokeIngestKey": ["restaurant_data.manage"],
+  "restaurant-actions:setMemberScope": ["network.manage"],
+  "restaurant-actions:setUpRestaurant": ["network.manage"],
+  "restaurant-actions:updateBranch": ["network.manage"],
+  "restaurant-actions:updateFranchisee": ["network.manage"],
   // services/settings-actions.ts
   "settings-actions:buyAiCredit": ["billing.manage"],
   "settings-actions:changePassword": "member",

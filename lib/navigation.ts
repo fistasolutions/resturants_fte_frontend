@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Database,
   FileText,
+  HandCoins,
   Footprints,
   Gauge,
   Headset,
@@ -25,10 +26,14 @@ import {
   Settings,
   Share2,
   ShoppingCart,
+  Store,
   Sun,
+  Timer,
   Target,
   Telescope,
+  UserRound,
   Users,
+  UtensilsCrossed,
   Warehouse,
   type LucideIcon,
 } from "lucide-react";
@@ -79,6 +84,14 @@ export const navItems: NavItem[] = [
   // SPEC-374: sheets, Airtable and invoices copied exactly, turned into real cost and profit. Shown
   // only to organizations with the `data_manager` feature (backend SPEC-383).
   { title: "Data Manager", href: "/data-manager", icon: Database, enabled: true, within: "/employees" },
+  // Restaurant brands (SPEC-377; backend SPEC-387/389): shown only to an organization with the
+  // `restaurant` feature — the backend's navigation hides them for everyone else, and hides the
+  // Shopify-only pages for a restaurant brand.
+  { title: "Network", href: "/network", icon: Store, enabled: true },
+  { title: "Menu Engineering", href: "/menu", icon: UtensilsCrossed, enabled: true },
+  { title: "Operations", href: "/operations", icon: Timer, enabled: true },
+  { title: "Guests", href: "/guests", icon: UserRound, enabled: true },
+  { title: "Royalties", href: "/royalties", icon: HandCoins, enabled: true },
   { title: "Daily Reports", href: "/reports", icon: FileText, enabled: true },
   // The Report FTE (SPEC-256): one digital employee that builds any report from the
   // engine's figures on the owner's schedule. Entered through Digital Employees since

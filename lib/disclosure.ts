@@ -246,6 +246,9 @@ const GUIDED: ReadonlySet<string> = new Set<GuidedReason>([
 /** Whether the member may open the page at `pathname`, and what to say when not. */
 export function accessFor(pathname: string, nav: WorkspaceNavigation): Access {
   if (nav === null) return ALLOWED;
+  // SPEC-377: `/` only sends the member to their landing page (a restaurant brand's is
+  // /network); gating it as the dashboard would hide the redirect behind a lock.
+  if (pathname.split("?")[0] === "/") return ALLOWED;
   const map = byKey(nav);
   const key = pageKey(pathname);
   const item = map.get(key);

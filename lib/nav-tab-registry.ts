@@ -21,6 +21,12 @@ import { LOCKED_PAGES, isPageShown, pageId, tabId } from "@/lib/nav-prefs";
 import { ORDERS_TABS } from "@/lib/order-tabs";
 import { PRODUCT_TABS } from "@/lib/product-tabs";
 import { REPORT_FTE_TABS } from "@/lib/report-fte-tabs";
+import {
+  NETWORK_TAB_LABELS,
+  NETWORK_TABS,
+  OPERATIONS_TAB_LABELS,
+  OPERATIONS_TABS,
+} from "@/lib/restaurant";
 import { RESULTS_TABS } from "@/lib/results-tabs";
 import { RETURNS_TAB_IDS, RETURNS_TAB_LABELS } from "@/lib/returns-tabs";
 import { SOCIAL_TAB_IDS, SOCIAL_TAB_LABELS } from "@/lib/social";
@@ -56,6 +62,8 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/customer-support": SUPPORT_TAB_IDS.map((key) => ({ key, label: SUPPORT_TAB_LABELS[key] })),
   "/data-manager": DATA_TAB_IDS.map((key) => ({ key, label: DATA_TAB_LABELS[key] })),
   "/report-fte": pick(REPORT_FTE_TABS),
+  "/network": NETWORK_TABS.map((key) => ({ key, label: NETWORK_TAB_LABELS[key] })),
+  "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };
 

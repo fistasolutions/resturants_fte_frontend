@@ -82,6 +82,7 @@ export const OVERVIEW_FLOW: OverviewStep[] = [
 
 export const CONNECTED_SYSTEMS: ConnectedSystem[] = [
   { name: "Shopify", feeds: "Orders, products, variants and costs, inventory, customers, discounts, refunds, locations, tax lines — read-only, every 15 minutes", pages: "Everything" },
+  { name: "FoodTec (restaurant POS)", feeds: "For a restaurant brand: orders with their times, channels and lines, the menu with recipe costs, and daily labor — pushed by an integration with a brand-issued ingest key, or imported from its report exports. Read-only: nothing is ever written back to the POS", pages: "Network, Menu Engineering, Operations, Guests, Royalties" },
   { name: "Gorgias", feeds: "Support tickets, messages, agents, CSAT; the Customer Support Agent replies (approved by you, or on autopilot topics inside the guardrails), leaves internal notes and updates tickets through it", pages: "Team Performance, Morning Brief, Chat, Customer Support Agent" },
   { name: "Loop Returns", feeds: "Return records, reasons, sizes, exchanges, processing times", pages: "Returns Analytics, Product Analyst, Foresight" },
   { name: "iPacky", feeds: "Packing performance per packer and order", pages: "Warehouse, Morning Brief" },

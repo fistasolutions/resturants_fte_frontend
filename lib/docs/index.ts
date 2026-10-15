@@ -18,14 +18,19 @@ import { discountsDoc } from "@/lib/docs/content/discounts";
 import { emailMarketingDoc } from "@/lib/docs/content/email-marketing";
 import { employeesDoc } from "@/lib/docs/content/employees";
 import { foresightDoc } from "@/lib/docs/content/foresight";
+import { guestsDoc } from "@/lib/docs/content/guests";
 import { integrationsDoc } from "@/lib/docs/content/integrations";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
+import { menuDoc } from "@/lib/docs/content/menu";
+import { networkDoc } from "@/lib/docs/content/network";
+import { operationsDoc } from "@/lib/docs/content/operations";
 import { ordersDoc } from "@/lib/docs/content/orders";
 import { productsDoc } from "@/lib/docs/content/products";
 import { reportFteDoc } from "@/lib/docs/content/report-fte";
 import { reportsDoc } from "@/lib/docs/content/reports";
 import { resultsDoc } from "@/lib/docs/content/results";
 import { returnsDoc } from "@/lib/docs/content/returns";
+import { royaltiesDoc } from "@/lib/docs/content/royalties";
 import { settingsDoc } from "@/lib/docs/content/settings";
 import { socialDoc } from "@/lib/docs/content/social";
 import { spotlightDoc } from "@/lib/docs/content/spotlight";
@@ -55,18 +60,23 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   briefDoc,
   dashboardDoc,
   chatDoc,
+  networkDoc,
   reportsDoc,
   reportFteDoc,
   productsDoc,
+  menuDoc,
   dataManagerDoc,
   inventoryDoc,
   foresightDoc,
   ordersDoc,
+  operationsDoc,
   warehouseDoc,
   returnsDoc,
   discountsDoc,
   taxReportsDoc,
+  royaltiesDoc,
   customersDoc,
+  guestsDoc,
   teamPerformanceDoc,
   customerSupportDoc,
   trafficDoc,
