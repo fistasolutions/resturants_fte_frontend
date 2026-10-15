@@ -7,6 +7,8 @@ import {
   Boxes,
   BriefcaseBusiness,
   CheckCircle2,
+  ChefHat,
+  ClipboardList,
   Database,
   FileText,
   HandCoins,
@@ -88,7 +90,10 @@ export const navItems: NavItem[] = [
   // `restaurant` feature — the backend's navigation hides them for everyone else, and hides the
   // Shopify-only pages for a restaurant brand.
   { title: "Network", href: "/network", icon: Store, enabled: true },
-  { title: "Menu Engineering", href: "/menu", icon: UtensilsCrossed, enabled: true },
+  { title: "Menu", href: "/menu", icon: UtensilsCrossed, enabled: true },
+  // Restaurant OS (SPEC-379; backend SPEC-393): taking orders and running the kitchen.
+  { title: "Order Taking", href: "/pos", icon: ClipboardList, enabled: true },
+  { title: "Kitchen & Dispatch", href: "/kitchen", icon: ChefHat, enabled: true },
   { title: "Operations", href: "/operations", icon: Timer, enabled: true },
   { title: "Guests", href: "/guests", icon: UserRound, enabled: true },
   { title: "Royalties", href: "/royalties", icon: HandCoins, enabled: true },

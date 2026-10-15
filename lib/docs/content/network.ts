@@ -36,6 +36,7 @@ export const networkDoc = defineDoc({
     { title: "Regions", route: "/network?tab=regions", summary: "How the brand groups its branches, with each region's branch count.", details: ["A region with branches cannot be deleted until its branches move."] },
     { title: "Access", route: "/network?tab=access", summary: "Head office only: who sees which part of the network — the whole network, one franchisee, or some of its branches.", details: ["The owner always sees the whole network.", "A role that changes the whole brand (managing the network, the team or the integrations) cannot be limited to a franchise."] },
     { title: "Data", route: "/network?tab=data", summary: "Head office only: ingest keys for the POS, file imports for orders, menu and labor, and the reference the POS integration team needs.", details: ["A key is shown once; only its first characters are kept for display.", "A business day starts at 04:00 in the branch's timezone, unless the POS sends its own business date."] },
+    { title: "Settings", route: "/network?tab=settings", summary: "Head office only: the brand's rules — whether delivery charges count toward royalties, the royalty week's first day, a minimum weekly royalty per branch, and the delivery on-time target.", details: ["Every figure and statement uses the new rules from the moment they are saved; issued and paid statements keep what they billed."] },
   ],
   howToUse: [
     "Open Network and set up the brand.",

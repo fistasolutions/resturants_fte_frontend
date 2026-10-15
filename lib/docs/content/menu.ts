@@ -3,10 +3,10 @@ import { defineDoc } from "@/lib/docs/define";
 /** Frontend SPEC-377 (backend SPEC-387/389): a restaurant brand's Menu Engineering page. */
 export const menuDoc = defineDoc({
   slug: "menu",
-  title: "Menu Engineering",
+  title: "Menu",
   route: "/menu",
   area: "merchandising",
-  tagline: "Which menu items earn their place: popularity against contribution margin, from what the branches actually sold and what each recipe costs.",
+  tagline: "The brand's menu in one place: which items earn their place, the catalog every branch sells from, the offers, and each branch's prices and what it has run out of.",
   sources: ["Your POS (FoodTec): order lines and the menu with recipe costs"],
   refresh: "Whenever orders or the menu arrive",
   updated: "2026-10-15",
@@ -26,10 +26,13 @@ export const menuDoc = defineDoc({
     "An item is popular when its share of units reaches 70% of an even share. It is profitable when its margin reaches the average margin, weighted by units sold.",
   ],
   sections: [
-    { title: "Menu Engineering", route: "/menu", summary: "The four group tiles, the thresholds, every item with its units, mix, price, food cost, margin and contribution, and category totals.", details: ["Click a group or a category to filter the table.", "Narrow it to a franchisee, a region or a period with the controls above."] },
+    { title: "Engineering", route: "/menu", summary: "The four group tiles, the thresholds, every item with its units, mix, price, food cost, margin and contribution, and category totals.", details: ["Click a group or a category to filter the table.", "Narrow it to a franchisee, a region or a period with the controls above."] },
+    { title: "Catalog", route: "/menu?tab=catalog", summary: "Head office builds the menu: categories, items with their sizes and recipe costs, and the groups of toppings and choices each item offers.", details: ["A toppings group can allow halves and light or extra, price each topping by size, and include toppings in the price.", "Removing an item or an option retires it, so past orders still name it."] },
+    { title: "Offers", route: "/menu?tab=offers", summary: "Coupon codes and offers that apply by themselves: percent or amount off, free delivery, or a set price for a size.", details: ["An offer can be limited to days, order types, dates and a minimum order.", "Only the best offer applies to an order; a code wins over automatic offers."] },
+    { title: "Branch menu", route: "/menu?tab=branch", summary: "One branch's prices and what it has run out of.", details: ["A branch price overrides the brand's for that branch only.", "Switching an item, size or topping off (86) removes it from the POS and the online menu at once."] },
   ],
   howToUse: [
-    "Make sure the menu carries recipe costs (Network › Data › Import a file › Menu).",
+    "Build the menu on Catalog, or import it on Network › Data › Import a file › Menu, with recipe costs.",
     "Open Menu Engineering and read the four groups.",
     "Open Plowhorses first: they are where a small price or cost change pays most.",
     "Check Puzzles with your marketing team: they need visibility, not a new recipe.",

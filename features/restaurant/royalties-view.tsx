@@ -23,7 +23,7 @@ export function RoyaltiesView({ filters }: { filters: RestaurantFilters }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <Figure label="Net sales" value={money(data.totals.netSales)} hint="the royalty basis" />
+        <Figure label="Gross sales" value={money(data.totals.netSales)} hint="the royalty basis" />
         <Figure label="Royalty" value={money(data.totals.royalty)} />
         <Figure label="Ad fund" value={money(data.totals.adFund)} />
         <Figure label="Total due" value={money(data.totals.totalDue)} />
@@ -34,7 +34,7 @@ export function RoyaltiesView({ filters }: { filters: RestaurantFilters }) {
             <TableRow>
               <TableHead>Franchisee</TableHead>
               <TableHead className="hidden text-right md:table-cell">Branches trading</TableHead>
-              <TableHead className="text-right">Net sales</TableHead>
+              <TableHead className="text-right">Gross sales</TableHead>
               <TableHead className="hidden text-right lg:table-cell">Royalty rate</TableHead>
               <TableHead className="text-right">Royalty</TableHead>
               <TableHead className="hidden text-right lg:table-cell">Ad fund rate</TableHead>
@@ -79,7 +79,11 @@ export function RoyaltiesView({ filters }: { filters: RestaurantFilters }) {
           </TableFooter>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">{data.basis}</p>
+      <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+        {data.basisRules.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,0 +1,103 @@
+"use client";
+
+import { Check, Phone } from "lucide-react";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePublicQuery } from "@/features/storefront/use-public-query";
+import { storefrontQueries } from "@/lib/queries/storefront";
+import { describeModifiers, trackSteps } from "@/lib/restaurant-os";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatTime } from "@/utils/format";
+
+/** The guest's live order tracker (SPEC-379 over backend SPEC-394), refreshed every 20 seconds. */
+export function TrackView({ token }: { token: string }) {
+  const query = usePublicQuery(storefrontQueries.track(token), 20_000);
+  if (query.isError) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-lg font-semibold">We could not find this order.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Check the link in your confirmation.</p>
+      </main>
+    );
+  }
+  if (!query.data) {
+    return (
+      <main className="mx-auto max-w-lg space-y-4 px-4 py-10">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-64 rounded-2xl" />
+      </main>
+    );
+  }
+  const order = query.data;
+  const cancelled = order.stage === "cancelled";
+  const steps = trackSteps(order);
+  const due = order.channel === "delivery" ? order.quotedDeliveryAt : order.quotedReadyAt;
+  return (
+    <main className="mx-auto max-w-lg space-y-6 px-4 py-10">
+      <header className="space-y-1">
+        <p className="text-sm text-muted-foreground">{order.brand} · {order.branchName}</p>
+        <h1 className="text-2xl font-bold">
+          {order.customerFirstName ? `${order.customerFirstName}, ` : ""}order #{order.orderNumber}
+        </h1>
+        {cancelled ? (
+          <p className="text-sm font-medium text-destructive">This order was cancelled. Please call the store.</p>
+        ) : due ? (
+          <p className="text-sm text-muted-foreground">
+            {order.channel === "delivery" ? "Expected at your door" : "Expected ready"} about <span className="font-semibold text-foreground">{formatTime(due)}</span>
+          </p>
+        ) : null}
+      </header>
+
+      {!cancelled ? (
+        <ol className="space-y-0" aria-label="Order progress">
+          {steps.map((step, i) => (
+            <li key={step.key} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <span
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded-full border text-xs font-bold",
+                    step.done ? "border-success bg-success text-background" : step.current ? "border-primary text-primary" : "border-border text-muted-foreground",
+                  )}
+                  aria-current={step.current ? "step" : undefined}
+                >
+                  {step.done ? <Check className="size-4" aria-hidden /> : i + 1}
+                </span>
+                {i < steps.length - 1 ? <span className={cn("h-8 w-px", step.done ? "bg-success" : "bg-border")} aria-hidden /> : null}
+              </div>
+              <div className="pb-6">
+                <p className={cn("text-sm font-medium", step.current ? "text-foreground" : step.done ? "text-foreground" : "text-muted-foreground")}>{step.label}</p>
+                {step.at ? <p className="text-xs text-muted-foreground">{formatTime(step.at)}</p> : null}
+                {step.key === "out" && step.current && order.driverName ? <p className="text-xs text-muted-foreground">{order.driverName} is on the way.</p> : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+
+      <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">Your order</h2>
+        <ul className="space-y-1.5">
+          {order.lines.map((line, i) => (
+            <li key={i} className="flex justify-between gap-3 text-sm">
+              <span>
+                {line.quantity}× {line.name}
+                {line.modifiers.length ? <span className="block text-xs text-muted-foreground">{describeModifiers(line.modifiers)}</span> : null}
+              </span>
+              <span className="tabular-nums">{formatCurrency(line.lineTotal)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex justify-between border-t border-border pt-2 text-sm font-bold">
+          <span>Total</span>
+          <span className="tabular-nums">{formatCurrency(order.total)}</span>
+        </div>
+      </section>
+      {order.branchPhone ? (
+        <a href={`tel:${order.branchPhone}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <Phone className="size-4" aria-hidden /> {order.branchPhone}
+        </a>
+      ) : null}
+      <p className="text-xs text-muted-foreground">This page updates by itself.</p>
+    </main>
+  );
+}

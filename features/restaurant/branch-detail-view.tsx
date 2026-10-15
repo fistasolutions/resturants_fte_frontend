@@ -13,6 +13,7 @@ import { BranchDialog } from "@/features/restaurant/branch-dialog";
 import { NetSalesChart } from "@/features/restaurant/net-sales-chart";
 import { Figure, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { PeriodPicker } from "@/features/restaurant/period-picker";
+import { ServicePanel } from "@/features/restaurant-os/service-panel";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { restaurantQueries } from "@/lib/queries/restaurant";
 import { BRANCH_STATUS_LABELS, money, overviewTiles, periodLabel } from "@/lib/restaurant";
@@ -103,6 +104,7 @@ export function BranchDetailView({ branchId, filters }: { branchId: number; filt
         </>
       )}
       {b ? <Details branch={b} /> : null}
+      {b ? <ServicePanel branchId={b.id} /> : null}
       {editing && b ? <BranchDialog open={editing} onOpenChange={setEditing} branch={b} /> : null}
     </main>
   );

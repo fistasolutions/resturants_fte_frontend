@@ -1,0 +1,194 @@
+/**
+ * Restaurant OS writes for signed-in members (frontend SPEC-379 / backend SPEC-392–393), through
+ * the proxy. Reads live in `lib/queries/restaurant.ts`. Every function's permission is in
+ * `lib/action-permissions.ts`, the same one the backend's route policy enforces.
+ */
+import { proxyUrl } from "@/lib/client-api";
+import { fromApi, toApi } from "@/lib/restaurant-api";
+import { orderBody } from "@/lib/restaurant-os";
+import { RestaurantRequestError } from "@/services/restaurant-actions";
+import type {
+  BranchMenu,
+  BranchService,
+  CatalogCategory,
+  CatalogGroup,
+  CatalogItem,
+  Deal,
+  Driver,
+  NativeOrder,
+  OrderInput,
+  OrderQuote,
+} from "@/types/restaurant-os";
+
+async function send<T>(method: string, path: string, body: unknown, fallback: string): Promise<T> {
+  const response = await fetch(proxyUrl(path), {
+    method,
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: { message?: string; details?: { message: string }[] } }
+      | null;
+    const details = (payload?.error?.details ?? []).map((d) => d.message);
+    const message = payload?.error?.message ?? `${fallback} (${response.status}).`;
+    throw new RestaurantRequestError(details.length ? `${message} ${details.join(" ")}` : message, response.status);
+  }
+  if (response.status === 204) return undefined as T;
+  return fromApi<T>(await response.json());
+}
+
+// ── the catalog ──────────────────────────────────────────────────────────────
+
+export function createCategory(input: { name: string; sort?: number }): Promise<CatalogCategory> {
+  return send("POST", "/restaurant/menu/categories", input, "Adding the category failed");
+}
+
+export function updateCategory(id: number, input: { name?: string; sort?: number; isActive?: boolean }): Promise<CatalogCategory> {
+  return send("PATCH", `/restaurant/menu/categories/${id}`, toApi({ ...input }), "Saving the category failed");
+}
+
+export function deleteCategory(id: number): Promise<void> {
+  return send("DELETE", `/restaurant/menu/categories/${id}`, undefined, "Deleting the category failed");
+}
+
+export interface ItemInput {
+  name?: string;
+  description?: string | null;
+  categoryId?: number | null;
+  kind?: string;
+  price?: number;
+  foodCost?: number | null;
+  sort?: number;
+  isActive?: boolean;
+}
+
+export function createItem(input: ItemInput): Promise<CatalogItem> {
+  return send("POST", "/restaurant/menu/items", toApi({ ...input }), "Adding the item failed");
+}
+
+export function updateItem(id: number, input: ItemInput): Promise<CatalogItem> {
+  return send("PATCH", `/restaurant/menu/items/${id}`, toApi({ ...input }), "Saving the item failed");
+}
+
+export function retireItem(id: number): Promise<CatalogItem> {
+  return send("DELETE", `/restaurant/menu/items/${id}`, undefined, "Retiring the item failed");
+}
+
+export function setItemSizes(id: number, sizes: { id?: number | null; name: string; price: number; foodCost?: number | null }[]): Promise<CatalogItem> {
+  return send(
+    "PUT",
+    `/restaurant/menu/items/${id}/sizes`,
+    { sizes: sizes.map((s) => ({ id: s.id ?? null, name: s.name, price: s.price, food_cost: s.foodCost ?? null })) },
+    "Saving the sizes failed",
+  );
+}
+
+export function setItemGroups(id: number, groupIds: number[]): Promise<CatalogItem> {
+  return send("PUT", `/restaurant/menu/items/${id}/groups`, { group_ids: groupIds }, "Saving the item's choices failed");
+}
+
+export interface GroupInput {
+  name?: string;
+  kind?: string;
+  minSelect?: number;
+  maxSelect?: number | null;
+  allowHalves?: boolean;
+  allowAmounts?: boolean;
+  freeQuantity?: number;
+}
+
+export function createGroup(input: GroupInput): Promise<CatalogGroup> {
+  return send("POST", "/restaurant/menu/modifier-groups", toApi({ ...input }), "Adding the group failed");
+}
+
+export function updateGroup(id: number, input: GroupInput): Promise<CatalogGroup> {
+  return send("PATCH", `/restaurant/menu/modifier-groups/${id}`, toApi({ ...input }), "Saving the group failed");
+}
+
+export function setGroupOptions(
+  id: number,
+  options: { id?: number | null; name: string; price: number; sizePrices: Record<string, number>; foodCost?: number | null; isDefault: boolean; isActive: boolean }[],
+): Promise<CatalogGroup> {
+  return send(
+    "PUT",
+    `/restaurant/menu/modifier-groups/${id}/options`,
+    {
+      options: options.map((o) => ({
+        id: o.id ?? null,
+        name: o.name,
+        price: o.price,
+        size_prices: o.sizePrices,
+        food_cost: o.foodCost ?? null,
+        is_default: o.isDefault,
+        is_active: o.isActive,
+      })),
+    },
+    "Saving the options failed",
+  );
+}
+
+export type DealInput = Partial<Omit<Deal, "id">>;
+
+export function createDeal(input: DealInput): Promise<Deal> {
+  return send("POST", "/restaurant/menu/deals", toApi({ ...input }), "Adding the offer failed");
+}
+
+export function updateDeal(id: number, input: DealInput): Promise<Deal> {
+  return send("PATCH", `/restaurant/menu/deals/${id}`, toApi({ ...input }), "Saving the offer failed");
+}
+
+// ── a branch ─────────────────────────────────────────────────────────────────
+
+export interface OverrideChange {
+  target: "item" | "size" | "option";
+  targetId: number;
+  price?: number | null;
+  available?: boolean;
+}
+
+function changes(list: OverrideChange[]): { changes: Record<string, unknown>[] } {
+  return { changes: list.map((c) => ({ target: c.target, target_id: c.targetId, price: c.price ?? null, available: c.available ?? true })) };
+}
+
+export function setBranchPrices(branchId: number, list: OverrideChange[]): Promise<BranchMenu> {
+  return send("PUT", `/restaurant/menu/branches/${branchId}/prices`, changes(list), "Saving the branch's prices failed");
+}
+
+export function setBranchAvailability(branchId: number, list: OverrideChange[]): Promise<BranchMenu> {
+  return send("PUT", `/restaurant/menu/branches/${branchId}/availability`, changes(list), "Changing what is available failed");
+}
+
+export function saveBranchService(branchId: number, input: Partial<Omit<BranchService, "branchId">>): Promise<BranchService> {
+  return send("PUT", `/restaurant/branches/${branchId}/service`, toApi({ ...input }), "Saving the branch's service failed");
+}
+
+// ── orders ───────────────────────────────────────────────────────────────────
+
+export function quoteOrder(input: OrderInput): Promise<OrderQuote> {
+  return send("POST", "/restaurant/pos/quote", orderBody(input), "Pricing the order failed");
+}
+
+export function placeOrder(input: OrderInput): Promise<NativeOrder> {
+  return send("POST", "/restaurant/pos/orders", orderBody(input), "Placing the order failed");
+}
+
+export function advanceOrder(id: number, to: string): Promise<NativeOrder> {
+  return send("POST", `/restaurant/kitchen/orders/${id}/advance`, { to }, "Moving the order failed");
+}
+
+export function cancelOrder(id: number, reason: string): Promise<NativeOrder> {
+  return send("POST", `/restaurant/kitchen/orders/${id}/cancel`, { to: "cancelled", reason }, "Cancelling the order failed");
+}
+
+export function dispatchOrder(id: number, driverId: number): Promise<NativeOrder> {
+  return send("POST", `/restaurant/kitchen/orders/${id}/dispatch`, { driver_id: driverId }, "Sending the order out failed");
+}
+
+export function addDriver(branchId: number, name: string, phone: string | null): Promise<Driver> {
+  return send("POST", `/restaurant/kitchen/branches/${branchId}/drivers`, { name, phone }, "Adding the driver failed");
+}
+
+export function updateDriver(id: number, input: Partial<Pick<Driver, "name" | "phone" | "isActive" | "status">>): Promise<Driver> {
+  return send("PATCH", `/restaurant/kitchen/drivers/${id}`, toApi({ ...input }), "Saving the driver failed");
+}

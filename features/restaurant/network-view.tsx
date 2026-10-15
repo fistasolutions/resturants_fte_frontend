@@ -3,6 +3,7 @@
 import { QueryErrorState } from "@/components/shared/query-error-state";
 import { AccessTab } from "@/features/restaurant/access-tab";
 import { BranchesTab } from "@/features/restaurant/branches-tab";
+import { BrandSettingsTab } from "@/features/restaurant/brand-settings-tab";
 import { DataTab } from "@/features/restaurant/data-tab";
 import { FranchiseesTab } from "@/features/restaurant/franchisees-tab";
 import { OverviewTab } from "@/features/restaurant/overview-tab";
@@ -40,6 +41,8 @@ export function NetworkView({ tab, filters }: { tab: NetworkTab; filters: Restau
       return <AccessTab />;
     case "data":
       return <DataTab />;
+    case "settings":
+      return <BrandSettingsTab />;
     default:
       return <OverviewTab filters={filters} />;
   }

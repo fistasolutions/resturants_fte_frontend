@@ -255,12 +255,25 @@ export interface Guests {
   top: TopGuest[];
 }
 
+export interface RoyaltyBranchLine {
+  branchId: number;
+  code: string;
+  name: string;
+  basis: number;
+  royalty: number;
+  adFund: number;
+  minimumTopup: number;
+}
+
 export interface RoyaltyStatement {
   franchiseeId: number;
   name: string;
   kind: FranchiseeKind;
   branchesTrading: number;
   netSales: number;
+  basisSales: number;
+  minimumTopup: number;
+  lines: RoyaltyBranchLine[];
   royaltyRate: number;
   adFundRate: number;
   royalty: number;
@@ -271,6 +284,7 @@ export interface RoyaltyStatement {
 export interface Royalties {
   period: Period;
   basis: string;
+  basisRules: string[];
   statements: RoyaltyStatement[];
   totals: { netSales: number; royalty: number; adFund: number; totalDue: number };
 }
@@ -363,4 +377,39 @@ export interface RestaurantFilters {
   regionId?: number | null;
   branchId?: number | null;
   target?: number | null;
+}
+
+export type StatementStatus = "draft" | "issued" | "paid" | "void";
+
+/** One franchisee's weekly royalty bill (backend SPEC-390). */
+export interface WeeklyStatement {
+  id: number;
+  franchiseeId: number;
+  franchiseeName: string;
+  periodStart: string;
+  periodEnd: string;
+  status: StatementStatus;
+  basisSales: number;
+  royalty: number;
+  adFund: number;
+  minimumTopup: number;
+  totalDue: number;
+  lines: RoyaltyBranchLine[];
+  issuedAt: string | null;
+  paidAt: string | null;
+  paidReference: string | null;
+}
+
+export interface StatementList {
+  statements: WeeklyStatement[];
+  lastCompleteWeek: Period;
+}
+
+/** A brand's rules (backend SPEC-390). */
+export interface RestaurantRules {
+  royaltyIncludesDeliveryFees: boolean;
+  royaltyWeekStartsOn: number;
+  minimumWeeklyRoyalty: number | null;
+  onTimeTargetMinutes: number;
+  basisRules: string[];
 }

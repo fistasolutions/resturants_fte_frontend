@@ -20,11 +20,13 @@ import { employeesDoc } from "@/lib/docs/content/employees";
 import { foresightDoc } from "@/lib/docs/content/foresight";
 import { guestsDoc } from "@/lib/docs/content/guests";
 import { integrationsDoc } from "@/lib/docs/content/integrations";
+import { kitchenDoc } from "@/lib/docs/content/kitchen";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
 import { networkDoc } from "@/lib/docs/content/network";
 import { operationsDoc } from "@/lib/docs/content/operations";
 import { ordersDoc } from "@/lib/docs/content/orders";
+import { posDoc } from "@/lib/docs/content/pos";
 import { productsDoc } from "@/lib/docs/content/products";
 import { reportFteDoc } from "@/lib/docs/content/report-fte";
 import { reportsDoc } from "@/lib/docs/content/reports";
@@ -69,6 +71,8 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   inventoryDoc,
   foresightDoc,
   ordersDoc,
+  posDoc,
+  kitchenDoc,
   operationsDoc,
   warehouseDoc,
   returnsDoc,

@@ -14,10 +14,13 @@ import {
   normalizeMenuClass,
   normalizeNetworkTab,
   normalizeOperationsTab,
+  normalizeRoyaltyTab,
+  normalizeStatementStatus,
   overviewTiles,
   resolvePeriod,
   scopeLabel,
   share,
+  statementActions,
   SOURCE_LABELS,
   withParams,
 } from "@/lib/restaurant";
@@ -169,5 +172,21 @@ describe("the landing page", () => {
     const nav = [{ key: "dashboard", visible: false, ready: true, reason: "feature" as const }];
     expect(accessFor("/", nav).allowed).toBe(true);
     expect(accessFor("/dashboard", nav).allowed).toBe(false);
+  });
+});
+
+describe("royalty billing (SPEC-378)", () => {
+  it("offers only the moves the backend allows", () => {
+    expect(statementActions("draft")).toEqual(["issue", "void"]);
+    expect(statementActions("issued")).toEqual(["paid", "void"]);
+    expect(statementActions("paid")).toEqual([]);
+    expect(statementActions("void")).toEqual([]);
+  });
+
+  it("normalizes the tab and the status filter", () => {
+    expect(normalizeRoyaltyTab("statements")).toBe("statements");
+    expect(normalizeRoyaltyTab("x")).toBe("period");
+    expect(normalizeStatementStatus("paid")).toBe("paid");
+    expect(normalizeStatementStatus("lost")).toBeNull();
   });
 });

@@ -2,10 +2,10 @@
  * Restaurant API adapters (frontend SPEC-377). The backend speaks snake_case; the views read
  * camelCase. One pure converter does it, leaving alone the maps whose KEYS are data: the KPI
  * record (`KpiKey`), the menu-class counts (`MenuClass`), a CSV import's column mapping and its
- * preview rows.
+ * preview rows, a topping's prices by size name and a branch's hours by weekday.
  */
 
-const PRESERVE_KEYS = new Set(["kpis", "counts", "columns", "preview"]);
+const PRESERVE_KEYS = new Set(["kpis", "counts", "columns", "preview", "size_prices", "hours"]);
 
 function camelKey(key: string): string {
   return key.replace(/_([a-z0-9])/g, (_, ch: string) => ch.toUpperCase());

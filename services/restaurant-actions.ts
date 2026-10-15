@@ -14,7 +14,9 @@ import type {
   ImportReport,
   IngestKey,
   Region,
+  RestaurantRules,
   RestaurantSetup,
+  WeeklyStatement,
 } from "@/types/restaurant";
 
 export class RestaurantRequestError extends Error {
@@ -198,4 +200,23 @@ export async function importRestaurantFile(kind: ImportKind, file: File, dryRun:
     "Importing the file failed",
   );
   return { ...report, result: report.result ?? null };
+}
+
+// ── royalty billing (backend SPEC-390) ───────────────────────────────────────
+
+export function generateStatements(weekStart: string): Promise<{ statements: WeeklyStatement[] }> {
+  return send("POST", "/restaurant/royalties/statements/generate", { week_start: weekStart }, "Billing the week failed");
+}
+
+export function moveStatement(id: number, action: "issue" | "paid" | "void", reference?: string): Promise<WeeklyStatement> {
+  return send(
+    "POST",
+    `/restaurant/royalties/statements/${id}/${action}`,
+    action === "paid" ? { reference: reference ?? null } : undefined,
+    "Updating the statement failed",
+  );
+}
+
+export function saveRestaurantSettings(input: Partial<Omit<RestaurantRules, "basisRules">>): Promise<RestaurantRules> {
+  return send("PUT", "/restaurant/settings", toApi({ ...input }), "Saving the rules failed");
 }

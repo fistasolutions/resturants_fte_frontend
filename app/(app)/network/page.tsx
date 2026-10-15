@@ -23,6 +23,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
   else if (tab === "branches") prefetch(queryClient, restaurantQueries.league(filters));
   else if (tab === "franchisees") prefetch(queryClient, restaurantQueries.franchisees());
   else if (tab === "regions") prefetch(queryClient, restaurantQueries.regions());
+  else if (tab === "settings") prefetch(queryClient, restaurantQueries.settings());
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <NetworkView tab={tab} filters={filters} />

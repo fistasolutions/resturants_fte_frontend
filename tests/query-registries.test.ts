@@ -45,6 +45,7 @@ import { reportFtePaths, reportFteQueries } from "@/lib/queries/report-fte";
 import { reportPaths, reportQueries } from "@/lib/queries/reports";
 import { restaurantPaths, restaurantQueries } from "@/lib/queries/restaurant";
 import { resultPaths, resultQueries } from "@/lib/queries/results";
+import { storefrontPaths, storefrontQueries } from "@/lib/queries/storefront";
 import { returnPaths, returnQueries } from "@/lib/queries/returns";
 import { setupPaths, setupQueries } from "@/lib/queries/setup";
 import { socialPaths, socialQueries } from "@/lib/queries/social";
@@ -158,7 +159,8 @@ const REGISTRIES: Array<{
   { domain: "system", paths: systemPaths, defs: [systemQueries.jobs(), systemQueries.runs({ jobId: "j", status: "error", window: "7d", page: 2 }), systemQueries.run(4)] },
   { domain: "tax-reports", paths: taxReportPaths, defs: [taxReportQueries.list(), taxReportQueries.detail(3), taxReportQueries.rows(3)] },
   { domain: "traffic", paths: trafficPaths, defs: [trafficQueries.overview(RANGE.from, RANGE.to), trafficQueries.peakHours(RANGE.from, RANGE.to), trafficQueries.storeDetail(2, RANGE.from, RANGE.to)] },
-  { domain: "restaurant", paths: restaurantPaths, defs: [restaurantQueries.setup(), restaurantQueries.regions(), restaurantQueries.franchisees(), restaurantQueries.franchisee(2), restaurantQueries.team(2), restaurantQueries.branches(), restaurantQueries.branches({ franchiseeId: 2 }), restaurantQueries.branch(7), restaurantQueries.scorecard(7, RANGE), restaurantQueries.members(), restaurantQueries.ingestKeys(), restaurantQueries.overview(RANGE), restaurantQueries.overview({ ...RANGE, franchiseeId: 2 }), restaurantQueries.league(RANGE), restaurantQueries.dayparts(RANGE), restaurantQueries.channels(RANGE), restaurantQueries.menu(RANGE), restaurantQueries.speed(RANGE), restaurantQueries.speed({ ...RANGE, target: 45 }), restaurantQueries.guests(RANGE), restaurantQueries.royalties(RANGE)] },
+  { domain: "restaurant", paths: restaurantPaths, defs: [restaurantQueries.setup(), restaurantQueries.regions(), restaurantQueries.franchisees(), restaurantQueries.franchisee(2), restaurantQueries.team(2), restaurantQueries.branches(), restaurantQueries.branches({ franchiseeId: 2 }), restaurantQueries.branch(7), restaurantQueries.scorecard(7, RANGE), restaurantQueries.members(), restaurantQueries.ingestKeys(), restaurantQueries.overview(RANGE), restaurantQueries.overview({ ...RANGE, franchiseeId: 2 }), restaurantQueries.league(RANGE), restaurantQueries.dayparts(RANGE), restaurantQueries.channels(RANGE), restaurantQueries.menu(RANGE), restaurantQueries.speed(RANGE), restaurantQueries.speed({ ...RANGE, target: 45 }), restaurantQueries.guests(RANGE), restaurantQueries.royalties(RANGE), restaurantQueries.statements(), restaurantQueries.statements("paid"), restaurantQueries.settings(), restaurantQueries.catalog(), restaurantQueries.branchMenu(3), restaurantQueries.service(3), restaurantQueries.board(3), restaurantQueries.drivers(3), restaurantQueries.caller("5551234567")] },
+  { domain: "storefront", paths: storefrontPaths, defs: [storefrontQueries.brand("brand"), storefrontQueries.locate("brand", "12345"), storefrontQueries.menu("brand", 3), storefrontQueries.track("tok")] },
   { domain: "warehouse", paths: warehousePaths, defs: [warehouseQueries.overview(RANGE.from, RANGE.to), warehouseQueries.packerOrders("Ana B", RANGE.from, RANGE.to), warehouseQueries.backlogOrders("d8_30", 100)] },
 ];
 

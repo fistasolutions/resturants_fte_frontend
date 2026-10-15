@@ -22,6 +22,10 @@ import { ORDERS_TABS } from "@/lib/order-tabs";
 import { PRODUCT_TABS } from "@/lib/product-tabs";
 import { REPORT_FTE_TABS } from "@/lib/report-fte-tabs";
 import {
+  KITCHEN_TAB_LABELS,
+  KITCHEN_TABS,
+  MENU_TAB_LABELS,
+  MENU_TABS,
   NETWORK_TAB_LABELS,
   NETWORK_TABS,
   OPERATIONS_TAB_LABELS,
@@ -63,6 +67,8 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/data-manager": DATA_TAB_IDS.map((key) => ({ key, label: DATA_TAB_LABELS[key] })),
   "/report-fte": pick(REPORT_FTE_TABS),
   "/network": NETWORK_TABS.map((key) => ({ key, label: NETWORK_TAB_LABELS[key] })),
+  "/menu": MENU_TABS.map((key) => ({ key, label: MENU_TAB_LABELS[key] })),
+  "/kitchen": KITCHEN_TABS.map((key) => ({ key, label: KITCHEN_TAB_LABELS[key] })),
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };

@@ -71,6 +71,7 @@ export interface RestaurantSearchParams {
   class?: string;
   category?: string;
   q?: string;
+  status?: string;
 }
 
 /** Every read's filters, from the URL. */
@@ -120,7 +121,7 @@ export function periodLabel(from: string, to: string): string {
 
 // ── tabs ─────────────────────────────────────────────────────────────────────
 
-export const NETWORK_TABS = ["overview", "branches", "franchisees", "regions", "access", "data"] as const;
+export const NETWORK_TABS = ["overview", "branches", "franchisees", "regions", "access", "data", "settings"] as const;
 export type NetworkTab = (typeof NETWORK_TABS)[number];
 export const NETWORK_TAB_LABELS: Record<NetworkTab, string> = {
   overview: "Overview",
@@ -129,9 +130,10 @@ export const NETWORK_TAB_LABELS: Record<NetworkTab, string> = {
   regions: "Regions",
   access: "Access",
   data: "Data",
+  settings: "Settings",
 };
 /** Tabs only head office has. */
-export const HQ_TABS: ReadonlySet<NetworkTab> = new Set(["access", "data"]);
+export const HQ_TABS: ReadonlySet<NetworkTab> = new Set(["access", "data", "settings"]);
 
 export function normalizeNetworkTab(value: string | undefined | null): NetworkTab {
   return (NETWORK_TABS as readonly string[]).includes(value ?? "") ? (value as NetworkTab) : "overview";
@@ -291,6 +293,9 @@ export const FRANCHISE_ROLE_PERMISSIONS: Permission[] = [
   "menu.manage",
   "royalties.view",
   "franchise_team.manage",
+  "orders.take",
+  "kitchen.operate",
+  "branch.manage",
   "chat.use",
   "report_fte.view",
   "data.export",
@@ -304,4 +309,58 @@ export function scopeLabel(
   if (franchiseeName == null) return "Whole network";
   if (branchIds == null) return franchiseeName;
   return `${branchIds.length} branch${branchIds.length === 1 ? "" : "es"} of ${franchiseeName}`;
+}
+
+// ── royalties ────────────────────────────────────────────────────────────────
+
+export const ROYALTY_TABS = ["period", "statements"] as const;
+export type RoyaltyTab = (typeof ROYALTY_TABS)[number];
+export const ROYALTY_TAB_LABELS: Record<RoyaltyTab, string> = { period: "This period", statements: "Statements" };
+
+export function normalizeRoyaltyTab(value: string | undefined | null): RoyaltyTab {
+  return value === "statements" ? "statements" : "period";
+}
+
+export const STATEMENT_STATUSES = ["draft", "issued", "paid", "void"] as const;
+export const STATEMENT_STATUS_LABELS: Record<(typeof STATEMENT_STATUSES)[number], string> = {
+  draft: "Draft",
+  issued: "Issued",
+  paid: "Paid",
+  void: "Void",
+};
+
+export function normalizeStatementStatus(value: string | undefined | null): (typeof STATEMENT_STATUSES)[number] | null {
+  return (STATEMENT_STATUSES as readonly string[]).includes(value ?? "") ? (value as (typeof STATEMENT_STATUSES)[number]) : null;
+}
+
+/** The moves a statement in `status` allows (backend SPEC-390 `TRANSITIONS`). */
+export function statementActions(status: string): ("issue" | "paid" | "void")[] {
+  if (status === "draft") return ["issue", "void"];
+  if (status === "issued") return ["paid", "void"];
+  return [];
+}
+
+export const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+
+// ── Restaurant OS pages (SPEC-379) ───────────────────────────────────────────
+
+export const MENU_TABS = ["engineering", "catalog", "offers", "branch"] as const;
+export type MenuTab = (typeof MENU_TABS)[number];
+export const MENU_TAB_LABELS: Record<MenuTab, string> = {
+  engineering: "Engineering",
+  catalog: "Catalog",
+  offers: "Offers",
+  branch: "Branch menu",
+};
+
+export function normalizeMenuTab(value: string | undefined | null): MenuTab {
+  return (MENU_TABS as readonly string[]).includes(value ?? "") ? (value as MenuTab) : "engineering";
+}
+
+export const KITCHEN_TABS = ["kitchen", "dispatch", "drivers"] as const;
+export type KitchenTabKey = (typeof KITCHEN_TABS)[number];
+export const KITCHEN_TAB_LABELS: Record<KitchenTabKey, string> = { kitchen: "Kitchen", dispatch: "Dispatch", drivers: "Drivers" };
+
+export function normalizeKitchenTab(value: string | undefined | null): KitchenTabKey {
+  return (KITCHEN_TABS as readonly string[]).includes(value ?? "") ? (value as KitchenTabKey) : "kitchen";
 }

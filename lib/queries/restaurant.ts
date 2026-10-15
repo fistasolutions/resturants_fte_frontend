@@ -5,6 +5,14 @@
 import { defineQuery } from "@/lib/query-def";
 import { fromApi } from "@/lib/restaurant-api";
 import type {
+  BranchMenu,
+  BranchService,
+  CallerLookup,
+  Catalog,
+  Driver,
+  KitchenBoard,
+} from "@/types/restaurant-os";
+import type {
   Branch,
   Channels,
   Dayparts,
@@ -21,7 +29,10 @@ import type {
   RestaurantSetup,
   Royalties,
   Scorecard,
+  RestaurantRules,
   Speed,
+  StatementList,
+  StatementStatus,
 } from "@/types/restaurant";
 
 export const RESTAURANT_KEY = ["restaurant"] as const;
@@ -84,6 +95,15 @@ export const restaurantPaths = {
     `/restaurant/menu/engineering?${filterQuery(filters)}`,
   speed: (filters: RestaurantFilters): string => `/restaurant/speed?${filterQuery(filters)}`,
   guests: (filters: RestaurantFilters): string => `/restaurant/guests?${filterQuery(filters)}`,
+  statements: (status: StatementStatus | null = null): string =>
+    status ? `/restaurant/royalties/statements?status=${status}` : "/restaurant/royalties/statements",
+  settings: (): string => "/restaurant/settings",
+  catalog: (): string => "/restaurant/menu/catalog",
+  branchMenu: (id: number): string => `/restaurant/menu/branches/${id}`,
+  service: (id: number): string => `/restaurant/branches/${id}/service`,
+  board: (id: number): string => `/restaurant/kitchen/branches/${id}/orders`,
+  drivers: (id: number): string => `/restaurant/kitchen/branches/${id}/drivers`,
+  caller: (phone: string): string => `/restaurant/pos/customers?phone=${encodeURIComponent(phone)}`,
   royalties: (filters: RestaurantFilters): string =>
     `/restaurant/royalties?${filterQuery({ ...filters, branchId: null })}`,
 } as const;
@@ -165,6 +185,38 @@ export const restaurantQueries = {
   guests: (filters: RestaurantFilters) =>
     defineQuery<Guests>([...RESTAURANT_KEY, "guests", ...filterKey(filters)], async (api) =>
       fromApi<Guests>(await api(restaurantPaths.guests(filters))),
+    ),
+  statements: (status: StatementStatus | null = null) =>
+    defineQuery<StatementList>([...RESTAURANT_KEY, "statements", status], async (api) =>
+      fromApi<StatementList>(await api(restaurantPaths.statements(status))),
+    ),
+  settings: () =>
+    defineQuery<RestaurantRules>([...RESTAURANT_KEY, "settings"], async (api) =>
+      fromApi<RestaurantRules>(await api(restaurantPaths.settings())),
+    ),
+  catalog: () =>
+    defineQuery<Catalog>([...RESTAURANT_KEY, "catalog"], async (api) =>
+      fromApi<Catalog>(await api(restaurantPaths.catalog())),
+    ),
+  branchMenu: (id: number) =>
+    defineQuery<BranchMenu>([...RESTAURANT_KEY, "branch-menu", id], async (api) =>
+      fromApi<BranchMenu>(await api(restaurantPaths.branchMenu(id))),
+    ),
+  service: (id: number) =>
+    defineQuery<BranchService>([...RESTAURANT_KEY, "service", id], async (api) =>
+      fromApi<BranchService>(await api(restaurantPaths.service(id))),
+    ),
+  board: (id: number) =>
+    defineQuery<KitchenBoard>([...RESTAURANT_KEY, "board", id], async (api) =>
+      fromApi<KitchenBoard>(await api(restaurantPaths.board(id))),
+    ),
+  drivers: (id: number) =>
+    defineQuery<Driver[]>([...RESTAURANT_KEY, "drivers", id], async (api) =>
+      fromApi<{ drivers: Driver[] }>(await api(restaurantPaths.drivers(id))).drivers,
+    ),
+  caller: (phone: string) =>
+    defineQuery<CallerLookup>([...RESTAURANT_KEY, "caller", phone], async (api) =>
+      fromApi<CallerLookup>(await api(restaurantPaths.caller(phone))),
     ),
   royalties: (filters: RestaurantFilters) =>
     defineQuery<Royalties>(

@@ -2,7 +2,19 @@
  * The restaurant pages' headers and tabs (frontend SPEC-377) — constants a server layout passes to
  * its client shell, so they live here and not in a `"use client"` file.
  */
-import { NETWORK_TAB_LABELS, NETWORK_TABS, OPERATIONS_TAB_LABELS, OPERATIONS_TABS, HQ_TABS } from "@/lib/restaurant";
+import {
+  HQ_TABS,
+  KITCHEN_TAB_LABELS,
+  KITCHEN_TABS,
+  MENU_TAB_LABELS,
+  MENU_TABS,
+  NETWORK_TAB_LABELS,
+  NETWORK_TABS,
+  OPERATIONS_TAB_LABELS,
+  OPERATIONS_TABS,
+  ROYALTY_TAB_LABELS,
+  ROYALTY_TABS,
+} from "@/lib/restaurant";
 
 export interface PageTab {
   key: string;
@@ -21,9 +33,26 @@ export const NETWORK_PAGE = {
 
 export const MENU_PAGE = {
   base: "/menu",
-  title: "Menu Engineering",
+  title: "Menu",
   description:
-    "Which items earn their place on the menu: popularity against contribution margin, from what your branches actually sold and what each recipe costs.",
+    "The brand's menu: which items earn their place, the catalog every branch sells from, the offers, and each branch's prices and what it has run out of.",
+  tabs: MENU_TABS.map((key): PageTab => ({ key, label: MENU_TAB_LABELS[key] })),
+  periodTabs: ["engineering"],
+} as const;
+
+export const POS_PAGE = {
+  base: "/pos",
+  title: "Order Taking",
+  description: "Take counter and phone orders: caller ID, the menu with the pizza builder, coupons, and the price the brand's rules give.",
+  periodTabs: [] as string[],
+} as const;
+
+export const KITCHEN_PAGE = {
+  base: "/kitchen",
+  title: "Kitchen & Dispatch",
+  description: "Every open order of the branch as a ticket: make it, bake it, send it out, and know who is on the road.",
+  tabs: KITCHEN_TABS.map((key): PageTab => ({ key, label: KITCHEN_TAB_LABELS[key] })),
+  periodTabs: [] as string[],
 } as const;
 
 export const OPERATIONS_PAGE = {
@@ -42,5 +71,7 @@ export const GUESTS_PAGE = {
 export const ROYALTIES_PAGE = {
   base: "/royalties",
   title: "Royalties",
-  description: "What each franchisee owes in royalty and ad fund for the period, from their branches' net sales.",
+  description: "What each franchisee owes in royalty and ad fund, on the brand's gross-sales basis — and the weekly statements that bill it.",
+  tabs: ROYALTY_TABS.map((key): PageTab => ({ key, label: ROYALTY_TAB_LABELS[key] })),
+  periodTabs: ["period"],
 } as const;
