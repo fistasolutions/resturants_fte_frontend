@@ -15,6 +15,7 @@ import {
   ROYALTY_TAB_LABELS,
   ROYALTY_TABS,
 } from "@/lib/restaurant";
+import { POS_TAB_LABELS, POS_TABS } from "@/lib/restaurant-os";
 
 export interface PageTab {
   key: string;
@@ -43,7 +44,15 @@ export const MENU_PAGE = {
 export const POS_PAGE = {
   base: "/pos",
   title: "Order Taking",
-  description: "Take counter and phone orders: caller ID, the menu with the pizza builder, coupons, and the price the brand's rules give.",
+  description: "Take counter and phone orders: caller ID, the menu with the pizza builder, coupons, cash or card — and the day's orders to settle and refund.",
+  tabs: POS_TABS.map((key): PageTab => ({ key, label: POS_TAB_LABELS[key] })),
+  periodTabs: [] as string[],
+} as const;
+
+export const CASH_PAGE = {
+  base: "/cash",
+  title: "Cash & Day Close",
+  description: "The branch's drawer: open with a float, record paid-ins, paid-outs and drops, count and close the day — and the day's report.",
   periodTabs: [] as string[],
 } as const;
 

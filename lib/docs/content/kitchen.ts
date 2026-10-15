@@ -1,6 +1,6 @@
 import { defineDoc } from "@/lib/docs/define";
 
-/** Frontend SPEC-379 (backend SPEC-393): Kitchen & Dispatch. */
+/** Frontend SPEC-379/380 (backend SPEC-393/395): Kitchen & Dispatch. */
 export const kitchenDoc = defineDoc({
   slug: "kitchen",
   title: "Kitchen & Dispatch",
@@ -20,14 +20,14 @@ export const kitchenDoc = defineDoc({
     { title: "Guests see it live", body: "Each move updates the guest's tracker link: made, in the oven, out with the driver, delivered." },
   ],
   howItWorks: [
-    "New orders arrive from the POS and the online store; online orders wait to be accepted.",
+    "New orders arrive from the POS and the online store; online orders wait to be accepted. An order paid by card online reaches the board only once Stripe says it is paid.",
     "One button moves a ticket to its next stage; a busy kitchen may skip ahead, and every stage passed is time-stamped.",
     "Ready delivery orders go to Dispatch, where a driver is chosen and the order sent out.",
-    "Delivered or picked-up orders complete and count as sales.",
+    "Delivered or picked-up orders complete and count as sales. An order still unpaid is finished with how it was paid — Paid cash or Paid card — and cash goes into the day's drawer.",
   ],
   sections: [
     { title: "Kitchen", route: "/kitchen", summary: "Four columns — New, Making, Oven, Ready — with each ticket's lines, toppings, notes, age and one bump button.", details: ["Cancel asks for a reason, which is kept with the order."] },
-    { title: "Dispatch", route: "/kitchen?tab=dispatch", summary: "Ready delivery orders with a driver picker and Send out; orders on the road with Delivered.", details: ["A driver back from the last delivery becomes available again by itself."] },
+    { title: "Dispatch", route: "/kitchen?tab=dispatch", summary: "Ready delivery orders with a driver picker and Send out; orders on the road with Delivered.", details: ["A driver back from the last delivery becomes available again by itself.", "An order the driver collects money for is marked Collect; Delivered asks whether it was paid cash or card."] },
     { title: "Drivers", route: "/kitchen?tab=drivers", summary: "The branch's drivers: add, set off shift or available, deactivate.", details: [] },
   ],
   howToUse: [
@@ -45,5 +45,5 @@ export const kitchenDoc = defineDoc({
     "The board shows the open orders and those finished in the last hour.",
     "Driver GPS comes in a later phase.",
   ],
-  related: ["pos", "operations", "network"],
+  related: ["pos", "cash", "operations", "network"],
 });

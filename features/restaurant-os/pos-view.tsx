@@ -16,18 +16,13 @@ import { CartPanel } from "@/features/restaurant-os/cart-panel";
 import { ItemBuilder } from "@/features/restaurant-os/item-builder";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
-import { CHANNEL_NAMES, quoteKeyLines, reorderLines } from "@/lib/restaurant-os";
+import { CHANNEL_NAMES, POS_PAYMENT_CHOICES, changeDue, paymentLabel, quoteKeyLines, reorderLines } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
 import { placeOrder, quoteOrder } from "@/services/restaurant-os-actions";
-import type { CartLineInput, MenuEntry, NativeOrder, OrderChannel, OrderInput, PaymentMethod } from "@/types/restaurant-os";
+import type { CartLineInput, MenuEntry, NativeOrder, OrderChannel, OrderInput } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
 const CHANNELS: OrderChannel[] = ["carryout", "delivery", "dine_in"];
-const PAYMENTS: { key: PaymentMethod; label: string }[] = [
-  { key: "cash", label: "Cash" },
-  { key: "card_on_delivery", label: "Card at the door / counter" },
-  { key: "pay_at_store", label: "Pay at the store" },
-];
 
 /** Order Taking (SPEC-379 over backend SPEC-393): the counter and the phone. */
 export function PosView() {
@@ -44,13 +39,15 @@ export function PosView() {
   const [address, setAddress] = useState({ line1: "", city: "", postalCode: "", instructions: "" });
   const [coupon, setCoupon] = useState("");
   const [tip, setTip] = useState("");
-  const [payment, setPayment] = useState<PaymentMethod>("cash");
+  const [payment, setPayment] = useState<string>(POS_PAYMENT_CHOICES[0].key);
+  const [given, setGiven] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<NativeOrder | null>(null);
   const caller = useApiQuery(lookup ? restaurantQueries.caller(lookup) : null);
 
+  const choice = POS_PAYMENT_CHOICES.find((c) => c.key === payment) ?? POS_PAYMENT_CHOICES[0];
   const input: OrderInput | null = branch
     ? {
         branchId: branch.id,
@@ -62,8 +59,9 @@ export function PosView() {
         customerPhone: phone.trim() || null,
         address: channel === "delivery" && address.line1.trim() ? { line1: address.line1.trim(), city: address.city.trim() || null, postalCode: address.postalCode.trim() || null, instructions: address.instructions.trim() || null } : null,
         notes: notes.trim() || null,
-        paymentMethod: payment,
+        paymentMethod: choice.method,
         source: phone.trim() ? "phone" : "walk_in",
+        tender: choice.tender ? { method: choice.tender, amountTendered: choice.tender === "cash" && given.trim() ? Number(given) : null } : null,
       }
     : null;
   const quoteKey = input ? { b: input.branchId, c: channel, l: quoteKeyLines(lines), coupon: input.coupon, tip: input.tip } : null;
@@ -94,6 +92,7 @@ export function PosView() {
       setCoupon("");
       setTip("");
       setNotes("");
+      setGiven("");
       await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "board", branch.id] });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Placing the order failed.");
@@ -185,6 +184,9 @@ export function PosView() {
           <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
             <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <CheckCircle2 className="size-4 text-success" aria-hidden /> Order #{placed.orderNumber} placed — {formatCurrency(placed.total)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {placed.paymentStatus === "paid" ? "Paid" : "To be paid"} · {paymentLabel(placed.paymentMethod)}
             </p>
             <p className="text-xs text-muted-foreground">
               Ready about {placed.quotedReadyAt ? formatTime(placed.quotedReadyAt) : "—"}
@@ -286,18 +288,31 @@ export function PosView() {
               <Input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="Coupon code" aria-label="Coupon code" maxLength={40} />
               <Input value={tip} onChange={(e) => setTip(e.target.value)} placeholder="Tip" aria-label="Tip" inputMode="decimal" />
             </div>
-            <Select value={payment} onValueChange={(v) => setPayment(v as PaymentMethod)}>
+            <Select value={payment} onValueChange={setPayment}>
               <SelectTrigger aria-label="Payment">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PAYMENTS.map((p) => (
+                {POS_PAYMENT_CHOICES.map((p) => (
                   <SelectItem key={p.key} value={p.key}>
                     {p.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {choice.tender === "cash" ? (
+              <div className="flex items-center gap-2">
+                <Input value={given} onChange={(e) => setGiven(e.target.value)} placeholder="Cash given (optional)" aria-label="Cash given" inputMode="decimal" />
+                <span className="shrink-0 text-sm tabular-nums text-muted-foreground" aria-live="polite">
+                  {given.trim() && quote.data
+                    ? (() => {
+                        const change = changeDue(quote.data.cart.total, given);
+                        return change == null ? "Not enough" : `Change ${formatCurrency(change)}`;
+                      })()
+                    : null}
+                </span>
+              </div>
+            ) : null}
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order note" aria-label="Order note" maxLength={2000} />
             {quote.data?.quote ? (
               <p className="text-xs text-muted-foreground">
@@ -310,7 +325,13 @@ export function PosView() {
             <RoleButton
               need={["orders.take"]}
               className="w-full"
-              disabled={busy || !quote.data || quote.data.cart.errors.length > 0 || (channel === "delivery" && !address.line1.trim())}
+              disabled={
+                busy ||
+                !quote.data ||
+                quote.data.cart.errors.length > 0 ||
+                (channel === "delivery" && !address.line1.trim()) ||
+                (choice.tender === "cash" && given.trim() !== "" && changeDue(quote.data.cart.total, given) == null)
+              }
               onClick={() => void place()}
             >
               {busy ? "Placing…" : quote.data ? `Place order · ${formatCurrency(quote.data.cart.total)}` : "Place order"}

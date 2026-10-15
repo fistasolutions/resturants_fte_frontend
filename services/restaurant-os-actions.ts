@@ -10,14 +10,18 @@ import { RestaurantRequestError } from "@/services/restaurant-actions";
 import type {
   BranchMenu,
   BranchService,
+  CashDrawer,
   CatalogCategory,
   CatalogGroup,
   CatalogItem,
   Deal,
   Driver,
   NativeOrder,
+  OrderDetail,
   OrderInput,
   OrderQuote,
+  PaymentAccount,
+  Tender,
 } from "@/types/restaurant-os";
 
 async function send<T>(method: string, path: string, body: unknown, fallback: string): Promise<T> {
@@ -173,8 +177,13 @@ export function placeOrder(input: OrderInput): Promise<NativeOrder> {
   return send("POST", "/restaurant/pos/orders", orderBody(input), "Placing the order failed");
 }
 
-export function advanceOrder(id: number, to: string): Promise<NativeOrder> {
-  return send("POST", `/restaurant/kitchen/orders/${id}/advance`, { to }, "Moving the order failed");
+function tenderBody(tender: Tender | null | undefined): Record<string, unknown> | null {
+  return tender ? { method: tender.method, amount_tendered: tender.amountTendered ?? null } : null;
+}
+
+/** Move an order on; finishing an unpaid one takes its tender (SPEC-380). */
+export function advanceOrder(id: number, to: string, tender?: Tender | null): Promise<NativeOrder> {
+  return send("POST", `/restaurant/kitchen/orders/${id}/advance`, { to, tender: tenderBody(tender) }, "Moving the order failed");
 }
 
 export function cancelOrder(id: number, reason: string): Promise<NativeOrder> {
@@ -191,4 +200,46 @@ export function addDriver(branchId: number, name: string, phone: string | null):
 
 export function updateDriver(id: number, input: Partial<Pick<Driver, "name" | "phone" | "isActive" | "status">>): Promise<Driver> {
   return send("PATCH", `/restaurant/kitchen/drivers/${id}`, toApi({ ...input }), "Saving the driver failed");
+}
+
+// ── payments, refunds and the drawer (SPEC-380 / backend SPEC-395) ───────────
+
+export function connectPayments(
+  franchiseeId: number,
+  input: { publishableKey: string; secretKey?: string | null; webhookSecret?: string | null },
+): Promise<PaymentAccount> {
+  return send(
+    "PUT",
+    `/restaurant/franchisees/${franchiseeId}/payments`,
+    { publishable_key: input.publishableKey, secret_key: input.secretKey || null, webhook_secret: input.webhookSecret || null },
+    "Connecting the payment account failed",
+  );
+}
+
+export function disconnectPayments(franchiseeId: number): Promise<void> {
+  return send("DELETE", `/restaurant/franchisees/${franchiseeId}/payments`, undefined, "Disconnecting the account failed");
+}
+
+export function payOrder(id: number, tender: Tender): Promise<OrderDetail> {
+  return send("POST", `/restaurant/pos/orders/${id}/pay`, tenderBody(tender), "Taking the payment failed");
+}
+
+export function refundOrder(id: number, amount: number, reason: string): Promise<OrderDetail> {
+  return send("POST", `/restaurant/pos/orders/${id}/refund`, { amount, reason }, "The refund failed");
+}
+
+export function openDrawer(branchId: number, openingFloat: number, date?: string | null): Promise<CashDrawer> {
+  return send("POST", `/restaurant/cash/branches/${branchId}/open`, { opening_float: openingFloat, date: date ?? null }, "Opening the drawer failed");
+}
+
+export function recordDrawerMovement(drawerId: number, kind: "paid_in" | "paid_out" | "drop", amount: number, note: string | null): Promise<CashDrawer> {
+  return send("POST", `/restaurant/cash/drawers/${drawerId}/movements`, { kind, amount, note }, "Recording the cash failed");
+}
+
+export function closeDrawer(drawerId: number, countedCash: number, notes: string | null): Promise<CashDrawer> {
+  return send("POST", `/restaurant/cash/drawers/${drawerId}/close`, { counted_cash: countedCash, notes }, "Closing the day failed");
+}
+
+export function reopenDrawer(drawerId: number): Promise<CashDrawer> {
+  return send("POST", `/restaurant/cash/drawers/${drawerId}/reopen`, undefined, "Reopening the day failed");
 }

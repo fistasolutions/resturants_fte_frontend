@@ -20,11 +20,12 @@ import {
   describeModifiers,
   isLate,
   minutesSince,
+  needsTender,
   nextStage,
 } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
 import { addDriver, advanceOrder, cancelOrder, dispatchOrder, updateDriver } from "@/services/restaurant-os-actions";
-import type { Driver, KitchenBoard, NativeOrder } from "@/types/restaurant-os";
+import type { Driver, KitchenBoard, NativeOrder, OrderStage } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
 export type KitchenTab = "kitchen" | "dispatch" | "drivers";
@@ -43,6 +44,39 @@ function useActions(branchId: number) {
     }
   };
   return { error, run };
+}
+
+/** Finishing an order: one button, or — when the money is still owed — how it was paid. */
+function FinishButtons({
+  order,
+  to,
+  label,
+  variant = "default",
+  onRun,
+}: {
+  order: NativeOrder;
+  to: OrderStage;
+  label: string;
+  variant?: "default" | "outline";
+  onRun: (work: () => Promise<unknown>) => Promise<void>;
+}) {
+  if (!needsTender(order, to)) {
+    return (
+      <Button size="sm" variant={variant} onClick={() => void onRun(() => advanceOrder(order.id, to))}>
+        {label}
+      </Button>
+    );
+  }
+  return (
+    <>
+      <Button size="sm" variant={variant} onClick={() => void onRun(() => advanceOrder(order.id, to, { method: "cash" }))}>
+        {label} · paid cash
+      </Button>
+      <Button size="sm" variant="outline" onClick={() => void onRun(() => advanceOrder(order.id, to, { method: "card_present" }))}>
+        Paid card
+      </Button>
+    </>
+  );
 }
 
 function Ticket({ order, now, onRun }: { order: NativeOrder; now: string; onRun: (work: () => Promise<unknown>) => Promise<void> }) {
@@ -77,11 +111,7 @@ function Ticket({ order, now, onRun }: { order: NativeOrder; now: string; onRun:
       {order.notes ? <p className="rounded-md bg-muted px-2 py-1 text-xs text-foreground">{order.notes}</p> : null}
       <RoleGate need={["kitchen.operate"]}>
         <div className="flex flex-wrap gap-1.5">
-          {next ? (
-            <Button size="sm" onClick={() => void onRun(() => advanceOrder(order.id, next.to))}>
-              {next.label}
-            </Button>
-          ) : null}
+          {next ? <FinishButtons order={order} to={next.to} label={next.label} onRun={onRun} /> : null}
           <Button size="sm" variant="ghost" onClick={() => setCancelling((v) => !v)}>
             Cancel
           </Button>
@@ -131,6 +161,7 @@ function Dispatch({ board, onRun }: { board: KitchenBoard; onRun: (work: () => P
         <p className="text-sm font-semibold text-foreground">
           #{order.orderNumber} · {formatCurrency(order.total)}
           {order.paymentStatus === "unpaid" ? <Badge variant="outline" className="ml-2">Collect {order.paymentMethod === "cash" ? "cash" : "payment"}</Badge> : null}
+          {order.paymentStatus === "paid" ? <Badge variant="outline" className="ml-2">Paid</Badge> : null}
         </p>
         <p className="truncate text-xs text-muted-foreground">
           {[order.deliveryAddress?.line1, order.deliveryAddress?.city, order.deliveryAddress?.postalCode].filter(Boolean).join(", ")}
@@ -179,9 +210,7 @@ function Dispatch({ board, onRun }: { board: KitchenBoard; onRun: (work: () => P
               order,
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">{order.driverName}</span>
-                <Button size="sm" variant="outline" onClick={() => void onRun(() => advanceOrder(order.id, "delivered"))}>
-                  Delivered
-                </Button>
+                <FinishButtons order={order} to="delivered" label="Delivered" variant="outline" onRun={onRun} />
               </div>,
             ),
           )}

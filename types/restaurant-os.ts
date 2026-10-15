@@ -8,8 +8,15 @@ export type GroupKind = "toppings" | "choice";
 export type Portion = "whole" | "left" | "right";
 export type Amount = "light" | "regular" | "extra";
 export type OrderChannel = "delivery" | "carryout" | "dine_in" | "catering";
-export type PaymentMethod = "cash" | "card_on_delivery" | "pay_at_store" | "marketplace";
+export type PaymentMethod = "cash" | "card" | "card_on_delivery" | "pay_at_store" | "card_online" | "marketplace";
+/** What was actually taken at the counter or the door (SPEC-380 / backend SPEC-395). */
+export type TenderMethod = "cash" | "card_present";
+export interface Tender {
+  method: TenderMethod;
+  amountTendered?: number | null;
+}
 export type OrderStage =
+  | "awaiting_payment"
   | "received"
   | "accepted"
   | "making"
@@ -222,6 +229,8 @@ export interface OrderInput {
   notes?: string | null;
   paymentMethod?: PaymentMethod;
   source?: string | null;
+  /** Settle at once at the counter. */
+  tender?: Tender | null;
 }
 
 // ── orders ───────────────────────────────────────────────────────────────────
@@ -362,6 +371,8 @@ export interface PublicMenu {
     carryoutMinutes: number;
     deliveryMinutes: number | null;
     busy: boolean;
+    /** The branch's franchise takes cards online (SPEC-380). */
+    cardOnline?: boolean;
   };
 }
 
@@ -371,6 +382,8 @@ export interface PlacedOrder {
   quotedReadyAt: string | null;
   quotedDeliveryAt: string | null;
   total: number;
+  /** Stripe's hosted page, for an order paid by card online. */
+  checkoutUrl?: string | null;
 }
 
 export interface TrackedOrder extends NativeOrder {
@@ -378,4 +391,118 @@ export interface TrackedOrder extends NativeOrder {
   currency: string;
   branchPhone: string | null;
   customerFirstName: string | null;
+}
+
+// ── payments, refunds and the drawer (SPEC-380 / backend SPEC-395) ───────────
+
+export interface PaymentAccount {
+  connected: boolean;
+  provider: string;
+  mode?: "test" | "live";
+  publishableKey?: string;
+  webhookUrl?: string;
+  webhookConfigured?: boolean;
+  verifiedAt?: string | null;
+  lastError?: string | null;
+}
+
+export interface OrderPayment {
+  id: number;
+  method: "cash" | "card_present" | "card_online" | "marketplace";
+  amount: number;
+  tip: number;
+  tendered: number | null;
+  changeDue: number | null;
+  status: string;
+  refunded: number;
+  createdAt: string | null;
+}
+
+export interface OrderRefund {
+  id: number;
+  amount: number;
+  reason: string;
+  method: string;
+  createdAt: string | null;
+}
+
+export interface OrderDetail extends NativeOrder {
+  refundTotal: number;
+  payments: OrderPayment[];
+  refunds: OrderRefund[];
+}
+
+export interface DayOrderRow {
+  id: number;
+  orderNumber: number | null;
+  placedAt: string | null;
+  channel: OrderChannel;
+  source: string;
+  stage: OrderStage | null;
+  status: string;
+  customerName: string | null;
+  customerPhone: string | null;
+  total: number;
+  paymentMethod: PaymentMethod | null;
+  paymentStatus: string | null;
+  refundTotal: number;
+  tenders: string[];
+}
+
+export interface DayOrders {
+  branchId: number;
+  date: string;
+  orders: DayOrderRow[];
+}
+
+export type DrawerKind = "cash_sale" | "paid_in" | "paid_out" | "cash_refund" | "drop";
+
+export interface CashDrawer {
+  id: number;
+  status: "open" | "closed";
+  businessDate: string;
+  openingFloat: number;
+  openedAt: string | null;
+  closedAt: string | null;
+  /** Each movement kind's total, keyed by the kind itself. */
+  byKind: Record<DrawerKind, number>;
+  expectedCash: number;
+  countedCash: number | null;
+  variance: number | null;
+  notes: string | null;
+}
+
+export interface DrawerMovement {
+  id: number;
+  kind: DrawerKind;
+  amount: number;
+  note: string | null;
+  orderId: number | null;
+  createdAt: string | null;
+}
+
+export interface DayReport {
+  orders: number;
+  openOrders: number;
+  grossSales: number;
+  netSales: number;
+  discounts: number;
+  tax: number;
+  tips: number;
+  deliveryFees: number;
+  refunds: number;
+  voids: number;
+  voidValue: number;
+  byChannel: { channel: OrderChannel; orders: number; netSales: number }[];
+  byTender: { method: string; payments: number; amount: number; refunded: number; net: number }[];
+}
+
+export interface CashDay {
+  branchId: number;
+  branchName: string;
+  date: string;
+  isToday: boolean;
+  drawer: CashDrawer | null;
+  movements: DrawerMovement[];
+  report: DayReport;
 }

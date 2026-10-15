@@ -9,7 +9,7 @@ export default async function Layout({ children }: Readonly<{ children: React.Re
   const workspace = await getWorkspace();
   if (!workspace.features.includes("restaurant")) notFound();
   return (
-    <RestaurantShell base={POS_PAGE.base} title={POS_PAGE.title} description={POS_PAGE.description} periodTabs={POS_PAGE.periodTabs} filters={false}>
+    <RestaurantShell base={POS_PAGE.base} title={POS_PAGE.title} description={POS_PAGE.description} tabs={POS_PAGE.tabs} periodTabs={POS_PAGE.periodTabs} filters={false}>
       {children}
     </RestaurantShell>
   );

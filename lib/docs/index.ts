@@ -20,6 +20,7 @@ import { employeesDoc } from "@/lib/docs/content/employees";
 import { foresightDoc } from "@/lib/docs/content/foresight";
 import { guestsDoc } from "@/lib/docs/content/guests";
 import { integrationsDoc } from "@/lib/docs/content/integrations";
+import { cashDoc } from "@/lib/docs/content/cash";
 import { kitchenDoc } from "@/lib/docs/content/kitchen";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
@@ -73,6 +74,7 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   ordersDoc,
   posDoc,
   kitchenDoc,
+  cashDoc,
   operationsDoc,
   warehouseDoc,
   returnsDoc,

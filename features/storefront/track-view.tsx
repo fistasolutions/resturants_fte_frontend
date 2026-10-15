@@ -5,13 +5,14 @@ import { Check, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { storefrontQueries } from "@/lib/queries/storefront";
-import { describeModifiers, trackSteps } from "@/lib/restaurant-os";
+import { describeModifiers, paymentLabel, trackSteps } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatTime } from "@/utils/format";
 
-/** The guest's live order tracker (SPEC-379 over backend SPEC-394), refreshed every 20 seconds. */
-export function TrackView({ token }: { token: string }) {
-  const query = usePublicQuery(storefrontQueries.track(token), 20_000);
+/** The guest's live order tracker (SPEC-379 over backend SPEC-394), refreshed every 20 seconds — and
+ * every 5 while an online card payment is being confirmed (SPEC-380). */
+export function TrackView({ token, paid = false }: { token: string; paid?: boolean }) {
+  const query = usePublicQuery(storefrontQueries.track(token), (data) => (data?.stage === "awaiting_payment" ? 5_000 : 20_000));
   if (query.isError) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16 text-center">
@@ -30,6 +31,7 @@ export function TrackView({ token }: { token: string }) {
   }
   const order = query.data;
   const cancelled = order.stage === "cancelled";
+  const awaiting = order.stage === "awaiting_payment";
   const steps = trackSteps(order);
   const due = order.channel === "delivery" ? order.quotedDeliveryAt : order.quotedReadyAt;
   return (
@@ -40,7 +42,17 @@ export function TrackView({ token }: { token: string }) {
           {order.customerFirstName ? `${order.customerFirstName}, ` : ""}order #{order.orderNumber}
         </h1>
         {cancelled ? (
-          <p className="text-sm font-medium text-destructive">This order was cancelled. Please call the store.</p>
+          <p className="text-sm font-medium text-destructive">
+            {order.paymentMethod === "card_online" && order.paymentStatus === "unpaid"
+              ? "The card payment was not completed, so this order was cancelled. You have not been charged."
+              : "This order was cancelled. Please call the store."}
+          </p>
+        ) : awaiting ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {paid
+              ? "Payment received — confirming with the store…"
+              : "Waiting for your card payment. The kitchen starts as soon as it is through; an unpaid order is cancelled after 30 minutes."}
+          </p>
         ) : due ? (
           <p className="text-sm text-muted-foreground">
             {order.channel === "delivery" ? "Expected at your door" : "Expected ready"} about <span className="font-semibold text-foreground">{formatTime(due)}</span>
@@ -48,7 +60,7 @@ export function TrackView({ token }: { token: string }) {
         ) : null}
       </header>
 
-      {!cancelled ? (
+      {!cancelled && !awaiting ? (
         <ol className="space-y-0" aria-label="Order progress">
           {steps.map((step, i) => (
             <li key={step.key} className="flex gap-3">
@@ -91,6 +103,9 @@ export function TrackView({ token }: { token: string }) {
           <span>Total</span>
           <span className="tabular-nums">{formatCurrency(order.total)}</span>
         </div>
+        <p className="text-xs text-muted-foreground">
+          {paymentLabel(order.paymentMethod)} · {order.paymentStatus === "paid" ? "paid" : order.paymentStatus === "unpaid" ? "to pay" : (order.paymentStatus ?? "").replace(/_/g, " ")}
+        </p>
       </section>
       {order.branchPhone ? (
         <a href={`tel:${order.branchPhone}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">

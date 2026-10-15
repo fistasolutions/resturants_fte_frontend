@@ -1,19 +1,27 @@
-/** Frontend SPEC-379 — Restaurant OS screens' pure half: kitchen stages, ticket age, the item
- * builder, reorders, request bodies, the tracker's steps and opening hours. */
+/** Frontend SPEC-379/380 — Restaurant OS screens' pure half: kitchen stages, ticket age, the item
+ * builder, reorders, request bodies, the tracker's steps, opening hours, and payments and the drawer. */
 import { describe, expect, it } from "vitest";
 
 import {
+  POS_PAYMENT_CHOICES,
+  STAGE_LABELS,
   builderDefaults,
   builderProblems,
   cartLine,
+  changeDue,
   columnOf,
   describeModifiers,
+  drawerLines,
   hoursFromText,
   hoursToText,
   isLate,
   minutesSince,
+  needsTender,
   nextStage,
   orderBody,
+  paymentLabel,
+  readPosTab,
+  refundable,
   reorderLines,
   toggleSelection,
   trackSteps,
@@ -193,5 +201,86 @@ describe("opening hours", () => {
     expect(parsed?.["4"]).toEqual([["17:00", "02:00"]]);
     expect(parsed?.["1"]).toEqual([]);
     expect(hoursFromText({ "0": "lunchtime" })).toBeNull();
+  });
+});
+
+// ── SPEC-380: payments and the drawer ─────────────────────────────────────────
+
+describe("payments and the drawer (SPEC-380)", () => {
+  it("reads the POS tab", () => {
+    expect(readPosTab("orders")).toBe("orders");
+    expect(readPosTab("nope")).toBe("new");
+    expect(readPosTab(undefined)).toBe("new");
+  });
+
+  it("pairs each POS payment choice with its method and tender", () => {
+    const byKey = Object.fromEntries(POS_PAYMENT_CHOICES.map((c) => [c.key, c]));
+    expect(byKey.cash_now).toMatchObject({ method: "cash", tender: "cash" });
+    expect(byKey.card_now).toMatchObject({ method: "card", tender: "card_present" });
+    expect(byKey.card_later).toMatchObject({ method: "card_on_delivery", tender: null });
+    expect(POS_PAYMENT_CHOICES[0].key).toBe("cash_now");
+  });
+
+  it("shows change only when the cash covers the total", () => {
+    expect(changeDue(46.73, "50")).toBe(3.27);
+    expect(changeDue(46.73, "46.73")).toBe(0);
+    expect(changeDue(46.73, "40")).toBeNull();
+    expect(changeDue(46.73, "abc")).toBeNull();
+    expect(changeDue(46.73, " ")).toBeNull();
+  });
+
+  it("asks for a tender only to finish an unpaid order", () => {
+    expect(needsTender({ paymentStatus: "unpaid" }, "picked_up")).toBe(true);
+    expect(needsTender({ paymentStatus: "unpaid" }, "delivered")).toBe(true);
+    expect(needsTender({ paymentStatus: "unpaid" }, "ready")).toBe(false);
+    expect(needsTender({ paymentStatus: "paid" }, "delivered")).toBe(false);
+  });
+
+  it("refunds at most what was taken and not yet given back", () => {
+    const payment = { id: 1, method: "cash" as const, amount: 46.73, tip: 0, tendered: 50, changeDue: 3.27, status: "partially_refunded", refunded: 6.73, createdAt: null };
+    expect(refundable({ status: "completed", payments: [payment] })).toBe(40);
+    expect(refundable({ status: "voided", payments: [payment, { ...payment, id: 2, status: "pending", refunded: 0 }] })).toBe(40);
+    expect(refundable({ status: "open", payments: [payment] })).toBe(0);
+    expect(refundable({ status: "completed", payments: [{ ...payment, refunded: 46.73, status: "refunded" }] })).toBe(0);
+  });
+
+  it("labels payments and statuses", () => {
+    expect(paymentLabel("card_online")).toBe("Card online");
+    expect(paymentLabel("card_present")).toBe("Card");
+    expect(paymentLabel(null)).toBe("—");
+    expect(paymentLabel("gift_card")).toBe("gift card");
+    expect(STAGE_LABELS.awaiting_payment).toBe("Awaiting payment");
+  });
+
+  it("lays the drawer out line by line with each line's sign", () => {
+    const lines = drawerLines({
+      id: 1,
+      status: "open",
+      businessDate: "2026-10-15",
+      openingFloat: 100,
+      openedAt: null,
+      closedAt: null,
+      byKind: { cash_sale: 46.73, paid_in: 5, paid_out: 10, cash_refund: 6.73, drop: 50 },
+      expectedCash: 85,
+      countedCash: null,
+      variance: null,
+      notes: null,
+    });
+    expect(lines.map((l) => [l.label, l.amount, l.sign])).toEqual([
+      ["Opening float", 100, 1],
+      ["Cash sales", 46.73, 1],
+      ["Paid in", 5, 1],
+      ["Paid out", 10, -1],
+      ["Cash refunds", 6.73, -1],
+      ["Drops", 50, -1],
+    ]);
+    expect(lines.reduce((sum, l) => sum + l.sign * l.amount, 0)).toBeCloseTo(85);
+  });
+
+  it("sends a tender with the order only when there is one", () => {
+    const base = { branchId: 3, channel: "carryout" as const, lines: [] };
+    expect(orderBody({ ...base, tender: { method: "cash", amountTendered: 50 } }).tender).toEqual({ method: "cash", amount_tendered: 50 });
+    expect(orderBody({ ...base, tender: { method: "card_present" } }).tender).toEqual({ method: "card_present", amount_tendered: null });
+    expect(orderBody(base).tender).toBeNull();
   });
 });

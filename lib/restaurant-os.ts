@@ -1,19 +1,25 @@
 /**
  * Restaurant OS screens' pure half (frontend SPEC-379): the kitchen's columns and next stage,
  * ticket age, topping labels, building cart lines from the item builder, reorders, the tracker's
- * steps and the request bodies. Prices are never computed here — the backend prices every cart.
+ * steps and the request bodies; and (SPEC-380) the POS payment choices, change, tenders and the
+ * drawer's lines. Prices are never computed here — the backend prices every cart.
  */
 import type {
   Amount,
   CallerLookup,
   CartLineInput,
   CartModifierInput,
+  CashDrawer,
+  DrawerKind,
   MenuEntry,
   NativeOrder,
   OrderChannel,
+  OrderDetail,
   OrderInput,
   OrderStage,
+  PaymentMethod,
   Portion,
+  Tender,
 } from "@/types/restaurant-os";
 
 // ── the kitchen ──────────────────────────────────────────────────────────────
@@ -26,6 +32,7 @@ export const KITCHEN_COLUMNS: { key: string; label: string; stages: OrderStage[]
 ];
 
 export const STAGE_LABELS: Record<OrderStage, string> = {
+  awaiting_payment: "Awaiting payment",
   received: "Received",
   accepted: "Accepted",
   making: "Making",
@@ -228,6 +235,7 @@ export function orderBody(input: OrderInput): Record<string, unknown> {
     notes: input.notes || null,
     payment_method: input.paymentMethod ?? "cash",
     source: input.source ?? null,
+    tender: input.tender ? { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null } : null,
   };
 }
 
@@ -302,4 +310,100 @@ export function hoursFromText(text: Record<string, string>): Record<string, stri
 /** What a cart's price depends on — the cache key of its quote (labels are display only). */
 export function quoteKeyLines(lines: CartLineInput[]): unknown[] {
   return lines.map((l) => [l.itemId, l.sizeId, l.quantity, l.note, l.modifiers.map((m) => [m.optionId, m.portion, m.amount])]);
+}
+
+// ── payments and the drawer (SPEC-380 / backend SPEC-395) ────────────────────
+
+export const POS_TABS = ["new", "orders"] as const;
+export type PosTab = (typeof POS_TABS)[number];
+export const POS_TAB_LABELS: Record<PosTab, string> = { new: "New order", orders: "Orders" };
+
+export function readPosTab(value: string | null | undefined): PosTab {
+  return (POS_TABS as readonly string[]).includes(value ?? "") ? (value as PosTab) : "new";
+}
+
+/** How the counter is paid: now (a tender goes with the order) or later (what the guest said). */
+export interface PaymentChoice {
+  key: string;
+  label: string;
+  method: PaymentMethod;
+  tender: Tender["method"] | null;
+}
+
+export const POS_PAYMENT_CHOICES: PaymentChoice[] = [
+  { key: "cash_now", label: "Cash now", method: "cash", tender: "cash" },
+  { key: "card_now", label: "Card now", method: "card", tender: "card_present" },
+  { key: "cash_later", label: "Cash at the door / pick-up", method: "cash", tender: null },
+  { key: "card_later", label: "Card at the door", method: "card_on_delivery", tender: null },
+  { key: "store_later", label: "Pay at the store", method: "pay_at_store", tender: null },
+];
+
+export const PAYMENT_LABELS: Record<string, string> = {
+  cash: "Cash",
+  card: "Card",
+  card_present: "Card",
+  card_on_delivery: "Card at the door",
+  pay_at_store: "Pay at the store",
+  card_online: "Card online",
+  marketplace: "Marketplace",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  unpaid: "Unpaid",
+  paid: "Paid",
+  partially_refunded: "Part refunded",
+  refunded: "Refunded",
+};
+
+export function paymentLabel(method: string | null | undefined): string {
+  return method ? (PAYMENT_LABELS[method] ?? method.replace(/_/g, " ")) : "—";
+}
+
+/** Change for `given` cash on `total`, to the cent; null when the cash does not cover it or is not
+ * a number. The backend computes the change it records — this is what the cashier sees first. */
+export function changeDue(total: number, given: string): number | null {
+  const cash = Number(given);
+  if (!given.trim() || !Number.isFinite(cash) || cash + 1e-9 < total) return null;
+  return Math.round((cash - total) * 100) / 100;
+}
+
+/** A finishing move (picked up / delivered) on an order still owed takes its tender with it. */
+export function needsTender(order: Pick<NativeOrder, "paymentStatus">, to: OrderStage): boolean {
+  return (to === "picked_up" || to === "delivered") && order.paymentStatus === "unpaid";
+}
+
+/** What is still refundable on an order: each taken payment less what it already gave back. */
+export function refundable(detail: Pick<OrderDetail, "payments" | "status">): number {
+  if (detail.status !== "completed" && detail.status !== "voided") return 0;
+  const cents = detail.payments
+    .filter((p) => p.status !== "pending" && p.status !== "failed")
+    .reduce((sum, p) => sum + Math.round(p.amount * 100) - Math.round(p.refunded * 100), 0);
+  return Math.max(0, cents) / 100;
+}
+
+export const DRAWER_LABELS: Record<DrawerKind, string> = {
+  cash_sale: "Cash sales",
+  paid_in: "Paid in",
+  paid_out: "Paid out",
+  cash_refund: "Cash refunds",
+  drop: "Drops",
+};
+
+/** One movement's name in the drawer's list. */
+export const MOVEMENT_LABELS: Record<DrawerKind, string> = {
+  cash_sale: "Cash sale",
+  paid_in: "Paid in",
+  paid_out: "Paid out",
+  cash_refund: "Cash refund",
+  drop: "Drop to safe",
+};
+
+/** The drawer's reconciliation, line by line, with the sign each line has. */
+export function drawerLines(drawer: CashDrawer): { label: string; amount: number; sign: 1 | -1 }[] {
+  const order: DrawerKind[] = ["cash_sale", "paid_in", "paid_out", "cash_refund", "drop"];
+  const sign: Record<DrawerKind, 1 | -1> = { cash_sale: 1, paid_in: 1, paid_out: -1, cash_refund: -1, drop: -1 };
+  return [
+    { label: "Opening float", amount: drawer.openingFloat, sign: 1 },
+    ...order.map((k) => ({ label: DRAWER_LABELS[k], amount: drawer.byKind[k] ?? 0, sign: sign[k] })),
+  ];
 }

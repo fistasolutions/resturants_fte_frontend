@@ -15,6 +15,7 @@ import { useCan } from "@/hooks/use-can";
 import { FranchiseeDialog } from "@/features/restaurant/franchisee-dialog";
 import { Figure, FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { InviteDialog, RoleDialog } from "@/features/restaurant/team-dialogs";
+import { PaymentsPanel } from "@/features/restaurant-os/payments-panel";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
 import { BRANCH_STATUS_LABELS, periodLabel, share } from "@/lib/restaurant";
@@ -190,6 +191,7 @@ export function FranchiseeDetailView({ franchiseeId }: { franchiseeId: number })
           ))
         )}
       </Panel>
+      <PaymentsPanel franchiseeId={franchiseeId} />
       <Team franchiseeId={franchiseeId} branches={list} />
       {editing && f ? <FranchiseeDialog open={editing} onOpenChange={setEditing} franchisee={f} /> : null}
     </main>

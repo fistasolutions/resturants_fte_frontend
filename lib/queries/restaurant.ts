@@ -8,9 +8,13 @@ import type {
   BranchMenu,
   BranchService,
   CallerLookup,
+  CashDay,
   Catalog,
+  DayOrders,
   Driver,
   KitchenBoard,
+  OrderDetail,
+  PaymentAccount,
 } from "@/types/restaurant-os";
 import type {
   Branch,
@@ -104,6 +108,17 @@ export const restaurantPaths = {
   board: (id: number): string => `/restaurant/kitchen/branches/${id}/orders`,
   drivers: (id: number): string => `/restaurant/kitchen/branches/${id}/drivers`,
   caller: (phone: string): string => `/restaurant/pos/customers?phone=${encodeURIComponent(phone)}`,
+  paymentAccount: (franchiseeId: number): string => `/restaurant/franchisees/${franchiseeId}/payments`,
+  dayOrders: (branchId: number, date: string | null, q: string | null): string => {
+    const params = new URLSearchParams();
+    if (date) params.set("date", date);
+    if (q) params.set("q", q);
+    const query = params.toString();
+    return `/restaurant/pos/branches/${branchId}/orders${query ? `?${query}` : ""}`;
+  },
+  orderDetail: (id: number): string => `/restaurant/pos/orders/${id}`,
+  cashDay: (branchId: number, date: string | null): string =>
+    `/restaurant/cash/branches/${branchId}${date ? `?date=${encodeURIComponent(date)}` : ""}`,
   royalties: (filters: RestaurantFilters): string =>
     `/restaurant/royalties?${filterQuery({ ...filters, branchId: null })}`,
 } as const;
@@ -217,6 +232,22 @@ export const restaurantQueries = {
   caller: (phone: string) =>
     defineQuery<CallerLookup>([...RESTAURANT_KEY, "caller", phone], async (api) =>
       fromApi<CallerLookup>(await api(restaurantPaths.caller(phone))),
+    ),
+  paymentAccount: (franchiseeId: number) =>
+    defineQuery<PaymentAccount>([...RESTAURANT_KEY, "payment-account", franchiseeId], async (api) =>
+      fromApi<PaymentAccount>(await api(restaurantPaths.paymentAccount(franchiseeId))),
+    ),
+  dayOrders: (branchId: number, date: string | null, q: string | null) =>
+    defineQuery<DayOrders>([...RESTAURANT_KEY, "day-orders", branchId, date, q], async (api) =>
+      fromApi<DayOrders>(await api(restaurantPaths.dayOrders(branchId, date, q))),
+    ),
+  orderDetail: (id: number) =>
+    defineQuery<OrderDetail>([...RESTAURANT_KEY, "order", id], async (api) =>
+      fromApi<OrderDetail>(await api(restaurantPaths.orderDetail(id))),
+    ),
+  cashDay: (branchId: number, date: string | null) =>
+    defineQuery<CashDay>([...RESTAURANT_KEY, "cash", branchId, date], async (api) =>
+      fromApi<CashDay>(await api(restaurantPaths.cashDay(branchId, date))),
     ),
   royalties: (filters: RestaurantFilters) =>
     defineQuery<Royalties>(

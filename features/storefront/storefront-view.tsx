@@ -62,6 +62,7 @@ function Checkout({
   mode,
   postal,
   lines,
+  cardOnline,
   onPlaced,
 }: {
   slug: string;
@@ -69,6 +70,7 @@ function Checkout({
   mode: Mode;
   postal: string;
   lines: CartLineInput[];
+  cardOnline: boolean;
   onPlaced: (order: PlacedOrder) => void;
 }) {
   const [name, setName] = useState("");
@@ -78,7 +80,7 @@ function Checkout({
   const [line1, setLine1] = useState("");
   const [city, setCity] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [payment, setPayment] = useState<PaymentMethod>(mode === "delivery" ? "card_on_delivery" : "pay_at_store");
+  const [payment, setPayment] = useState<PaymentMethod>(cardOnline ? "card_online" : mode === "delivery" ? "card_on_delivery" : "pay_at_store");
   const [tip, setTip] = useState("");
   const [coupon, setCoupon] = useState("");
   const [busy, setBusy] = useState(false);
@@ -110,7 +112,13 @@ function Checkout({
     setBusy(true);
     setError(null);
     try {
-      onPlaced(await placePublicOrder(slug, input));
+      const order = await placePublicOrder(slug, input);
+      // SPEC-380: a card payment happens on Stripe's own page; the tracker takes over after it.
+      if (order.checkoutUrl) {
+        window.location.assign(order.checkoutUrl);
+        return;
+      }
+      onPlaced(order);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Placing the order failed.");
     } finally {
@@ -160,6 +168,7 @@ function Checkout({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              {cardOnline ? <SelectItem value="card_online">Pay now by card</SelectItem> : null}
               {mode === "delivery" ? <SelectItem value="card_on_delivery">Card at the door</SelectItem> : <SelectItem value="pay_at_store">Pay at the store</SelectItem>}
               <SelectItem value="cash">Cash</SelectItem>
             </SelectContent>
@@ -179,7 +188,13 @@ function Checkout({
       </label>
       <FormError message={error} />
       <Button type="submit" className="w-full" size="lg" disabled={busy || !quote.data || quote.data.cart.errors.length > 0 || !name.trim() || !phone.trim()}>
-        {busy ? "Placing…" : quote.data ? `Place order · ${formatCurrency(quote.data.cart.total)}` : "Place order"}
+        {busy
+          ? payment === "card_online"
+            ? "Opening the secure payment…"
+            : "Placing…"
+          : quote.data
+            ? `${payment === "card_online" ? "Pay" : "Place order"} · ${formatCurrency(quote.data.cart.total)}`
+            : "Place order"}
       </Button>
       {quote.data?.quote ? (
         <p className="text-center text-xs text-muted-foreground">
@@ -324,7 +339,7 @@ export function StorefrontView({ slug }: { slug: string }) {
         <aside className="h-fit space-y-4 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-4">
           <h2 className="font-semibold">Your order</h2>
           {checkout ? (
-            <Checkout slug={slug} branch={branch} mode={mode} postal={searched ?? ""} lines={lines} onPlaced={setPlaced} />
+            <Checkout slug={slug} branch={branch} mode={mode} postal={searched ?? ""} lines={lines} cardOnline={Boolean(menu.data?.ordering.cardOnline)} onPlaced={setPlaced} />
           ) : (
             <>
               <CartPanel
