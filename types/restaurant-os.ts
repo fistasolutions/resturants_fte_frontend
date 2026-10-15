@@ -217,6 +217,9 @@ export interface DeliveryAddress {
   state?: string | null;
   postalCode?: string | null;
   instructions?: string | null;
+  /** SPEC-384: the address's map point. */
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface OrderInput {
@@ -309,6 +312,9 @@ export interface Driver {
   phone: string | null;
   isActive: boolean;
   status: "available" | "on_delivery" | "off";
+  /** SPEC-384: whether the driver has an app link, and their last position. */
+  hasLink?: boolean;
+  location?: { lat: number; lng: number; locatedAt: string | null } | null;
 }
 
 export interface KitchenBoard {
@@ -392,6 +398,8 @@ export interface PublicMenu {
     busy: boolean;
     /** The branch's franchise takes cards online (SPEC-380). */
     cardOnline?: boolean;
+    /** SPEC-384: the area the branch delivers to, when it drew one. */
+    deliveryZones?: { name: string; polygon: [number, number][]; fee: number; minimum: number }[];
   };
   /** SPEC-383: the brand's points program, when it is on. */
   loyalty?: { enabled: boolean; name: string; pointsPerUnit: number; welcomePoints: number };
@@ -413,6 +421,9 @@ export interface TrackedOrder extends NativeOrder {
   currency: string;
   branchPhone: string | null;
   customerFirstName: string | null;
+  /** SPEC-384: while out for delivery — the driver's fresh position and the guest's home. */
+  driverLocation?: { lat: number; lng: number; locatedAt: string | null } | null;
+  destination?: { lat: number; lng: number } | null;
 }
 
 // ── payments, refunds and the drawer (SPEC-380 / backend SPEC-395) ───────────
@@ -634,4 +645,60 @@ export interface GiftCardSettlement {
   totals: { sold: number; redeemed: number };
   cards: number;
   outstanding: number;
+}
+
+// ── delivery maps, runs and the driver app (SPEC-384 / backend SPEC-400) ─────
+
+export interface DeliveryZone {
+  id: number;
+  branchId: number;
+  name: string;
+  polygon: [number, number][];
+  fee: number;
+  minimum: number;
+  extraMinutes: number;
+  isActive: boolean;
+  sort: number;
+}
+
+export interface SuggestedRun {
+  orderIds: number[];
+  km: number;
+  orders: { id: number; orderNumber: number | null; address: string | null; point: { lat: number; lng: number } | null }[];
+}
+
+export interface RunSuggestions {
+  branchId: number;
+  branchPoint: { lat: number; lng: number } | null;
+  runs: SuggestedRun[];
+}
+
+export interface DriverLink {
+  driverId: number;
+  token: string;
+  path: string;
+}
+
+export interface DriverStop {
+  id: number;
+  orderNumber: number | null;
+  sequence: number | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  address: DeliveryAddress | null;
+  point: { lat: number; lng: number } | null;
+  notes: string | null;
+  items: number;
+  total: number;
+  amountDue: number;
+  paymentMethod: PaymentMethod | null;
+  quotedDeliveryAt: string | null;
+}
+
+export interface DriverApp {
+  driver: { id: number; name: string; status: Driver["status"] };
+  currency: string;
+  branch: { id: number | null; name: string | null; phone: string | null; lat: number | null; lng: number | null };
+  run: DriverStop[];
+  location: { lat: number | null; lng: number | null; locatedAt: string | null };
 }

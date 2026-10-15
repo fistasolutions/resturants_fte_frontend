@@ -3,7 +3,9 @@
 import { Check, Phone } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { GeoMap } from "@/features/restaurant-os/geo-map";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
+import { distanceKm, formatKm } from "@/lib/geo-map";
 import { storefrontQueries } from "@/lib/queries/storefront";
 import { describeModifiers, paymentLabel, trackSteps } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
@@ -12,7 +14,9 @@ import { formatCurrency, formatTime } from "@/utils/format";
 /** The guest's live order tracker (SPEC-379 over backend SPEC-394), refreshed every 20 seconds — and
  * every 5 while an online card payment is being confirmed (SPEC-380). */
 export function TrackView({ token, paid = false }: { token: string; paid?: boolean }) {
-  const query = usePublicQuery(storefrontQueries.track(token), (data) => (data?.stage === "awaiting_payment" ? 5_000 : 20_000));
+  const query = usePublicQuery(storefrontQueries.track(token), (data) =>
+    data?.stage === "awaiting_payment" ? 5_000 : data?.stage === "out_for_delivery" ? 10_000 : 20_000,
+  );
   if (query.isError) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16 text-center">
@@ -84,6 +88,25 @@ export function TrackView({ token, paid = false }: { token: string; paid?: boole
             </li>
           ))}
         </ol>
+      ) : null}
+
+      {order.stage === "out_for_delivery" && (order.driverLocation || order.destination) ? (
+        <section className="space-y-2">
+          <GeoMap
+            label="Your driver and your door"
+            markers={[
+              ...(order.driverLocation ? [{ id: "driver", point: order.driverLocation, kind: "driver" as const, label: (order.driverName ?? "D").slice(0, 1), title: order.driverName ?? "Your driver" }] : []),
+              ...(order.destination ? [{ id: "home", point: order.destination, kind: "home" as const, label: "⌂", title: "Your door" }] : []),
+            ]}
+            fitKey={order.driverLocation ? `${order.driverLocation.lat},${order.driverLocation.lng}` : "home"}
+            className="h-64"
+          />
+          {order.driverLocation && order.destination ? (
+            <p className="text-sm text-muted-foreground">
+              {order.driverName ?? "Your driver"} is about {formatKm(distanceKm(order.driverLocation, order.destination))} away.
+            </p>
+          ) : null}
+        </section>
       ) : null}
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4">

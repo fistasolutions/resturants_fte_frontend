@@ -250,6 +250,12 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "restaurant-os-actions:adjustGiftCard": ["gift_cards.manage"],
   "restaurant-os-actions:adjustPoints": ["loyalty.adjust"],
   "restaurant-os-actions:createReward": ["loyalty.manage"],
+  "restaurant-os-actions:createZone": ["branch.manage"],
+  "restaurant-os-actions:deleteZone": ["branch.manage"],
+  "restaurant-os-actions:dispatchRun": ["kitchen.operate"],
+  "restaurant-os-actions:issueDriverLink": ["kitchen.operate"],
+  "restaurant-os-actions:revokeDriverLink": ["kitchen.operate"],
+  "restaurant-os-actions:updateZone": ["branch.manage"],
   "restaurant-os-actions:enrollGuest": ["orders.take"],
   "restaurant-os-actions:lookUpGiftCard": ["orders.take"],
   "restaurant-os-actions:reloadGiftCard": ["orders.take"],
@@ -351,6 +357,10 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   // services/spotlight-generation.ts
   "spotlight-generation:startGeneration": ["spotlight.manage"],
   "spotlight-generation:startRefreshRewrite": ["spotlight.manage"],
+  // services/driver-app-actions.ts (SPEC-384; backend SPEC-400 — public, the link's token is the key)
+  "driver-app-actions:markDeliveredByDriver": "member",
+  "driver-app-actions:reportDriverLocation": "member",
+  "driver-app-actions:setDriverAvailability": "member",
   // services/storefront-actions.ts (SPEC-379; backend SPEC-394 — public, no sign-in)
   "storefront-actions:checkPublicGiftCard": "member",
   "storefront-actions:placePublicOrder": "member",

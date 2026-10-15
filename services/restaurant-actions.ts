@@ -118,6 +118,8 @@ export interface BranchInput {
   openedOn?: string | null;
   managerName?: string | null;
   managerEmail?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export function createBranch(input: BranchInput): Promise<Branch> {

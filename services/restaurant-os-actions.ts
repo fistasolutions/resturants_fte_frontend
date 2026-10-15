@@ -11,6 +11,8 @@ import type {
   BranchMenu,
   BranchService,
   CashDrawer,
+  DeliveryZone,
+  DriverLink,
   CatalogCategory,
   CatalogGroup,
   CatalogItem,
@@ -325,4 +327,32 @@ export function setGiftCardStatus(id: number, active: boolean): Promise<GiftCard
 
 export function adjustGiftCard(id: number, amount: number, note: string): Promise<GiftCardDetail> {
   return send("POST", `/restaurant/gift-cards/${id}/adjust`, { amount, note }, "Adjusting the card failed");
+}
+
+// ── delivery zones, driver links, runs (SPEC-384 / backend SPEC-400) ─────────
+
+export type ZoneInput = Partial<Pick<DeliveryZone, "name" | "polygon" | "fee" | "minimum" | "extraMinutes" | "isActive" | "sort">>;
+
+export function createZone(branchId: number, input: ZoneInput): Promise<DeliveryZone> {
+  return send("POST", `/restaurant/branches/${branchId}/zones`, toApi({ ...input }), "Saving the zone failed");
+}
+
+export function updateZone(branchId: number, zoneId: number, input: ZoneInput): Promise<DeliveryZone> {
+  return send("PATCH", `/restaurant/branches/${branchId}/zones/${zoneId}`, toApi({ ...input }), "Saving the zone failed");
+}
+
+export function deleteZone(branchId: number, zoneId: number): Promise<void> {
+  return send("DELETE", `/restaurant/branches/${branchId}/zones/${zoneId}`, undefined, "Deleting the zone failed");
+}
+
+export function issueDriverLink(driverId: number): Promise<DriverLink> {
+  return send("POST", `/restaurant/kitchen/drivers/${driverId}/link`, undefined, "Making the driver's link failed");
+}
+
+export function revokeDriverLink(driverId: number): Promise<void> {
+  return send("DELETE", `/restaurant/kitchen/drivers/${driverId}/link`, undefined, "Revoking the link failed");
+}
+
+export function dispatchRun(driverId: number, orderIds: number[]): Promise<{ orders: NativeOrder[] }> {
+  return send("POST", "/restaurant/kitchen/dispatch", { driver_id: driverId, order_ids: orderIds }, "Sending the run out failed");
 }

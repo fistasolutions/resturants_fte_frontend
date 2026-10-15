@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bike, Clock, UserPlus, X } from "lucide-react";
+import { Bike, Clock, Copy, Link2, UserPlus, X } from "lucide-react";
 
 import { QueryErrorState } from "@/components/shared/query-error-state";
 import { RoleButton, RoleGate } from "@/components/shared/role-gate";
@@ -25,7 +25,18 @@ import {
 } from "@/lib/restaurant-os";
 import { formatCodeInput, isCompleteCode } from "@/lib/loyalty";
 import { cn } from "@/lib/utils";
-import { addDriver, advanceOrder, cancelOrder, dispatchOrder, updateDriver } from "@/services/restaurant-os-actions";
+import {
+  addDriver,
+  advanceOrder,
+  cancelOrder,
+  dispatchOrder,
+  dispatchRun,
+  issueDriverLink,
+  revokeDriverLink,
+  updateDriver,
+} from "@/services/restaurant-os-actions";
+import { GeoMap, type MapMarker, type MapPolygon } from "@/features/restaurant-os/geo-map";
+import { ageLabel, formatKm, isFresh } from "@/lib/geo-map";
 import type { Driver, KitchenBoard, NativeOrder, OrderStage } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
@@ -173,6 +184,87 @@ function Kitchen({ board, onRun }: { board: KitchenBoard; onRun: (work: () => Pr
   );
 }
 
+function RunsPanel({
+  branchId,
+  board,
+  onRun,
+}: {
+  branchId: number;
+  board: KitchenBoard;
+  onRun: (work: () => Promise<unknown>) => Promise<void>;
+}) {
+  const suggestions = useApiQuery(restaurantQueries.batches(branchId), { refetchInterval: 10_000 });
+  const [chosen, setChosen] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+  const available = board.drivers.filter((d) => d.isActive && d.status !== "off");
+  const runs = (suggestions.data?.runs ?? []).filter((r) => r.orderIds.length > 1);
+  const home = suggestions.data?.branchPoint ?? null;
+  const ready = board.orders.filter((o) => o.channel === "delivery" && o.stage === "ready");
+  const polygons: MapPolygon[] = [];
+  const markers: MapMarker[] = [
+    ...(home ? [{ id: "branch", point: home, kind: "branch" as const, label: "B", title: board.branchName }] : []),
+    ...ready.flatMap((o) =>
+      o.deliveryAddress?.lat != null && o.deliveryAddress?.lng != null
+        ? [{ id: `o${o.id}`, point: { lat: o.deliveryAddress.lat, lng: o.deliveryAddress.lng }, kind: "order" as const, label: String(o.orderNumber), title: `#${o.orderNumber} · ${o.deliveryAddress.line1 ?? ""}` }]
+        : [],
+    ),
+    ...board.drivers.flatMap((d) =>
+      d.location && isFresh(d.location.locatedAt, Date.parse(board.now))
+        ? [{ id: `d${d.id}`, point: { lat: d.location.lat, lng: d.location.lng }, kind: "driver" as const, label: d.name.slice(0, 1).toUpperCase(), title: `${d.name} · ${ageLabel(d.location.locatedAt, Date.parse(board.now))}` }]
+        : [],
+    ),
+  ];
+  const send = (key: string, orderIds: number[]) =>
+    onRun(async () => {
+      await dispatchRun(Number(chosen[key]), orderIds);
+      await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "batches", branchId] });
+    });
+  return (
+    <section className="space-y-3">
+      <GeoMap label="Ready deliveries and drivers" polygons={polygons} markers={markers} fitKey={`${branchId}-${ready.map((o) => o.id).join(",")}`} fallbackCentre={home} />
+      {runs.length ? (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <h2 className="border-b border-border px-4 py-2 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground">Suggested runs · {runs.length}</h2>
+          <ul className="divide-y divide-border">
+            {runs.map((r) => {
+              const key = r.orderIds.join("-");
+              return (
+                <li key={key} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      {r.orders.map((o) => `#${o.orderNumber}`).join(" → ")} <span className="font-normal text-muted-foreground">· {formatKm(r.km)}</span>
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{r.orders.map((o) => o.address ?? "—").join(" · ")}</p>
+                  </div>
+                  <RoleGate need={["kitchen.operate"]}>
+                    <div className="flex items-center gap-1.5">
+                      <Select value={chosen[key]} onValueChange={(v) => setChosen((c) => ({ ...c, [key]: v }))}>
+                        <SelectTrigger className="h-8 w-[150px]" aria-label="Driver for the run">
+                          <SelectValue placeholder="Driver" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {available.map((d) => (
+                            <SelectItem key={d.id} value={String(d.id)}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" disabled={!chosen[key]} onClick={() => void send(key, r.orderIds)}>
+                        <Bike aria-hidden /> Send together
+                      </Button>
+                    </div>
+                  </RoleGate>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function Dispatch({ board, onRun }: { board: KitchenBoard; onRun: (work: () => Promise<unknown>) => Promise<void> }) {
   const [chosen, setChosen] = useState<Record<number, string>>({});
   const ready = board.orders.filter((o) => o.channel === "delivery" && o.stage === "ready");
@@ -243,7 +335,47 @@ function Dispatch({ board, onRun }: { board: KitchenBoard; onRun: (work: () => P
   );
 }
 
-function Drivers({ branchId, drivers, onRun }: { branchId: number; drivers: Driver[]; onRun: (work: () => Promise<unknown>) => Promise<void> }) {
+function DriverLinkButton({ driver, onRun }: { driver: Driver; onRun: (work: () => Promise<unknown>) => Promise<void> }) {
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const issue = () =>
+    onRun(async () => {
+      const made = await issueDriverLink(driver.id);
+      setLink(`${window.location.origin}${made.path}`);
+      setCopied(false);
+    });
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <Button size="sm" variant="outline" onClick={() => void issue()}>
+        <Link2 aria-hidden /> {driver.hasLink ? "New link" : "Driver link"}
+      </Button>
+      {driver.hasLink ? (
+        <Button size="sm" variant="ghost" onClick={() => void onRun(() => revokeDriverLink(driver.id))}>
+          Revoke
+        </Button>
+      ) : null}
+      {link ? (
+        <span className="flex w-full items-center gap-1.5">
+          <code className="min-w-0 flex-1 truncate rounded bg-muted px-2 py-1 text-xs">{link}</code>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              void navigator.clipboard.writeText(link).then(
+                () => setCopied(true),
+                () => setCopied(false),
+              );
+            }}
+          >
+            <Copy aria-hidden /> {copied ? "Copied" : "Copy"}
+          </Button>
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function Drivers({ branchId, drivers, onRun, now }: { branchId: number; drivers: Driver[]; onRun: (work: () => Promise<unknown>) => Promise<void>; now: string }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   return (
@@ -270,10 +402,13 @@ function Drivers({ branchId, drivers, onRun }: { branchId: number; drivers: Driv
           <li key={d.id} className="flex items-center justify-between gap-2 px-4 py-3">
             <div>
               <p className={cn("text-sm font-medium", d.isActive ? "text-foreground" : "text-muted-foreground line-through")}>{d.name}</p>
-              <p className="text-xs text-muted-foreground">{d.phone ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">
+                {d.phone ?? "—"} · {d.location ? `seen ${ageLabel(d.location.locatedAt, Date.parse(now)).toLowerCase()}` : "no position yet"}
+              </p>
             </div>
             <RoleGate need={["kitchen.operate"]}>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                <DriverLinkButton driver={d} onRun={onRun} />
                 <Select value={d.status} onValueChange={(v) => void onRun(() => updateDriver(d.id, { status: v as Driver["status"] }))}>
                   <SelectTrigger className="h-8 w-[140px]" aria-label={`${d.name}'s status`}>
                     <SelectValue />
@@ -321,9 +456,12 @@ export function KitchenView({ tab }: { tab: KitchenTab }) {
       ) : !board.data ? (
         <RestaurantSkeleton tiles={0} />
       ) : tab === "dispatch" ? (
-        <Dispatch board={board.data} onRun={run} />
+        <div className="space-y-4">
+          <RunsPanel branchId={branch.id} board={board.data} onRun={run} />
+          <Dispatch board={board.data} onRun={run} />
+        </div>
       ) : tab === "drivers" ? (
-        <Drivers branchId={branch.id} drivers={board.data.drivers} onRun={run} />
+        <Drivers branchId={branch.id} drivers={board.data.drivers} onRun={run} now={board.data.now} />
       ) : board.data.orders.length === 0 ? (
         <EmptyPanel title="The board is clear" body="New orders from the POS and the online store appear here as they come in." />
       ) : (

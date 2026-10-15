@@ -11,6 +11,7 @@ import type {
   CashDay,
   Catalog,
   DayOrders,
+  DeliveryZone,
   Driver,
   GiftCardDetail,
   GiftCardList,
@@ -21,6 +22,7 @@ import type {
   MemberDetail,
   OrderDetail,
   PaymentAccount,
+  RunSuggestions,
 } from "@/types/restaurant-os";
 import type {
   Branch,
@@ -124,6 +126,8 @@ export const restaurantPaths = {
   },
   orderDetail: (id: number): string => `/restaurant/pos/orders/${id}`,
   loyalty: (): string => "/restaurant/loyalty",
+  zones: (branchId: number): string => `/restaurant/branches/${branchId}/zones`,
+  batches: (branchId: number): string => `/restaurant/kitchen/branches/${branchId}/batches`,
   loyaltyMembers: (q: string | null): string => `/restaurant/loyalty/members${q ? `?q=${encodeURIComponent(q)}` : ""}`,
   loyaltyMember: (id: number): string => `/restaurant/loyalty/members/${id}`,
   giftCards: (last4: string | null, status: string | null): string => {
@@ -267,6 +271,14 @@ export const restaurantQueries = {
   cashDay: (branchId: number, date: string | null) =>
     defineQuery<CashDay>([...RESTAURANT_KEY, "cash", branchId, date], async (api) =>
       fromApi<CashDay>(await api(restaurantPaths.cashDay(branchId, date))),
+    ),
+  zones: (branchId: number) =>
+    defineQuery<DeliveryZone[]>([...RESTAURANT_KEY, "zones", branchId], async (api) =>
+      fromApi<{ zones: DeliveryZone[] }>(await api(restaurantPaths.zones(branchId))).zones,
+    ),
+  batches: (branchId: number) =>
+    defineQuery<RunSuggestions>([...RESTAURANT_KEY, "batches", branchId], async (api) =>
+      fromApi<RunSuggestions>(await api(restaurantPaths.batches(branchId))),
     ),
   loyalty: () =>
     defineQuery<LoyaltyOverview>([...RESTAURANT_KEY, "loyalty"], async (api) =>

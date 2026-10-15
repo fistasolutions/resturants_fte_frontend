@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bike, MapPin, ShoppingBag, Store } from "lucide-react";
+import { ArrowLeft, Bike, LocateFixed, MapPin, ShoppingBag, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +20,8 @@ import { quoteKeyLines } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
 import { checkPublicGiftCard, placePublicOrder, quotePublicOrder } from "@/services/storefront-actions";
 import { earnPreview, formatCodeInput, isCompleteCode } from "@/lib/loyalty";
+import { GeoMap } from "@/features/restaurant-os/geo-map";
+import type { LatLng } from "@/lib/geo-map";
 import type { CartLineInput, MenuEntry, OrderChannel, OrderInput, PaymentMethod, PlacedOrder, PublicBranch, PublicMenu } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
@@ -62,6 +64,8 @@ function Checkout({
   branch,
   mode,
   postal,
+  point,
+  zones,
   lines,
   cardOnline,
   loyalty,
@@ -71,6 +75,8 @@ function Checkout({
   branch: PublicBranch;
   mode: Mode;
   postal: string;
+  point: LatLng | null;
+  zones: NonNullable<PublicMenu["ordering"]["deliveryZones"]>;
   lines: CartLineInput[];
   cardOnline: boolean;
   loyalty: PublicMenu["loyalty"];
@@ -91,6 +97,7 @@ function Checkout({
   const [giftCode, setGiftCode] = useState("");
   const [giftNote, setGiftNote] = useState<string | null>(null);
   const [join, setJoin] = useState(false);
+  const [pin, setPin] = useState<LatLng | null>(point);
 
   const input: OrderInput = {
     branchId: branch.id,
@@ -102,7 +109,10 @@ function Checkout({
     customerPhone: phone.trim() || null,
     customerEmail: email.trim() || null,
     marketingOptIn: optIn,
-    address: mode === "delivery" ? { line1: line1.trim() || "-", city: city.trim() || null, postalCode: postal, instructions: instructions.trim() || null } : null,
+    address:
+      mode === "delivery"
+        ? { line1: line1.trim() || "-", city: city.trim() || null, postalCode: postal || null, instructions: instructions.trim() || null, lat: pin?.lat ?? null, lng: pin?.lng ?? null }
+        : null,
     paymentMethod: payment,
     giftCardCode: isCompleteCode(giftCode) ? giftCode : null,
     loyaltyJoin: Boolean(loyalty?.enabled) && join,
@@ -117,7 +127,7 @@ function Checkout({
     }
   };
   const quote = useQuery({
-    queryKey: ["storefront", "quote", slug, branch.id, mode, quoteKeyLines(lines), input.coupon, input.tip],
+    queryKey: ["storefront", "quote", slug, branch.id, mode, quoteKeyLines(lines), input.coupon, input.tip, pin?.lat ?? null, pin?.lng ?? null],
     queryFn: () => quotePublicOrder(slug, input),
     enabled: lines.length > 0,
     placeholderData: keepPreviousData,
@@ -163,6 +173,20 @@ function Checkout({
       </div>
       {mode === "delivery" ? (
         <div className="grid gap-3 sm:grid-cols-2">
+          {zones.length || pin ? (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Your door on the map</Label>
+              <GeoMap
+                label="Delivery area and your address"
+                polygons={zones.map((z, i) => ({ id: `z${i}`, points: z.polygon, label: `${z.name} · delivery ${formatCurrency(z.fee)}` }))}
+                markers={pin ? [{ id: "home", point: pin, kind: "home", label: "⌂", title: "Your address" }] : []}
+                onMapClick={setPin}
+                fitKey={`${branch.id}-${zones.length}`}
+                className="h-56"
+              />
+              <p className="text-xs text-muted-foreground">{pin ? "Tap the map to move the pin to your door." : "Tap the map where your door is."}</p>
+            </div>
+          ) : null}
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="co-line1">Street address</Label>
             <Input id="co-line1" value={line1} onChange={(e) => setLine1(e.target.value)} required autoComplete="street-address" />
@@ -254,7 +278,27 @@ export function StorefrontView({ slug }: { slug: string }) {
   const [mode, setMode] = useState<Mode | null>(null);
   const [postal, setPostal] = useState("");
   const [searched, setSearched] = useState<string | null>(null);
-  const located = usePublicQuery(searched ? storefrontQueries.locate(slug, searched) : null);
+  const [point, setPoint] = useState<LatLng | null>(null);
+  const [locating, setLocating] = useState<string | null>(null);
+  const byCode = usePublicQuery(searched && !point ? storefrontQueries.locate(slug, searched) : null);
+  const byPoint = usePublicQuery(point ? storefrontQueries.locateAt(slug, point.lat, point.lng) : null);
+  const located = point ? byPoint : byCode;
+  const useMyLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setLocating("This device cannot share its location — enter your postal code.");
+      return;
+    }
+    setLocating("Finding you…");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(null);
+        setSearched(null);
+        setPoint({ lat: Math.round(position.coords.latitude * 1e6) / 1e6, lng: Math.round(position.coords.longitude * 1e6) / 1e6 });
+      },
+      () => setLocating("We could not get your location — enter your postal code."),
+      { enableHighAccuracy: true, timeout: 15_000 },
+    );
+  };
   const [branch, setBranch] = useState<PublicBranch | null>(null);
   const menu = usePublicQuery(branch ? storefrontQueries.menu(slug, branch.id) : null);
   const [lines, setLines] = useState<CartLineInput[]>([]);
@@ -322,7 +366,10 @@ export function StorefrontView({ slug }: { slug: string }) {
               className="flex gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (postal.trim()) setSearched(postal.trim());
+                if (postal.trim()) {
+                  setPoint(null);
+                  setSearched(postal.trim());
+                }
               }}
             >
               <div className="relative flex-1">
@@ -330,7 +377,11 @@ export function StorefrontView({ slug }: { slug: string }) {
                 <Input value={postal} onChange={(e) => setPostal(e.target.value)} placeholder="Your postal code" aria-label="Your postal code" className="pl-8" autoComplete="postal-code" />
               </div>
               <Button type="submit">Find</Button>
+              <Button type="button" variant="outline" onClick={useMyLocation}>
+                <LocateFixed aria-hidden /> Use my location
+              </Button>
             </form>
+            {locating ? <p className="text-sm text-muted-foreground">{locating}</p> : null}
             {located.data ? (
               located.data.length ? (
                 <BranchChoice branches={located.data} onPick={setBranch} />
@@ -382,7 +433,18 @@ export function StorefrontView({ slug }: { slug: string }) {
         <aside className="h-fit space-y-4 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-4">
           <h2 className="font-semibold">Your order</h2>
           {checkout ? (
-            <Checkout slug={slug} branch={branch} mode={mode} postal={searched ?? ""} lines={lines} cardOnline={Boolean(menu.data?.ordering.cardOnline)} loyalty={menu.data?.loyalty} onPlaced={setPlaced} />
+            <Checkout
+              slug={slug}
+              branch={branch}
+              mode={mode}
+              postal={searched ?? ""}
+              point={point}
+              zones={menu.data?.ordering.deliveryZones ?? []}
+              lines={lines}
+              cardOnline={Boolean(menu.data?.ordering.cardOnline)}
+              loyalty={menu.data?.loyalty}
+              onPlaced={setPlaced}
+            />
           ) : (
             <>
               <CartPanel

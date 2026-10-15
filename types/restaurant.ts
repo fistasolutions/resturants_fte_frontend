@@ -70,6 +70,9 @@ export interface Branch {
   deliveryRadiusMiles: number | null;
   managerName: string | null;
   managerEmail: string | null;
+  /** The branch's place on the map (SPEC-384 uses it for zones and runs). */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Kpi {
