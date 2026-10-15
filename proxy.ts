@@ -33,6 +33,8 @@ const OPEN_ROUTES = [
   "/track",
   // SPEC-384: a driver's app — its link's token is the key.
   "/driver",
+  // SPEC-386: a restaurant brand's local pages and their sitemap.
+  "/r",
 ];
 
 // SPEC-215: the share card must be reachable WITHOUT a session. Slack, WhatsApp

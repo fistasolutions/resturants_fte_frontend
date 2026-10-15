@@ -19,8 +19,10 @@ import {
   type ApiPlatformsStatus,
 } from "@/lib/ad-platforms-api";
 import { defineQuery } from "@/lib/query-def";
+import { fromApi } from "@/lib/restaurant-api";
 import type { AdAudit, AdPerformance, AdPlatformsStatus } from "@/types/ad-platforms";
 import type {
+  BranchLift,
   AccountabilityData,
   BudgetSummary,
   CampaignsData,
@@ -42,6 +44,8 @@ export const adsPaths = {
   platforms: (): string => "/ads/platforms",
   platformPerformance: (days: number): string => `/ads/platforms/performance?days=${days}`,
   platformAudit: (days: number): string => `/ads/platforms/audit?days=${days}`,
+  // SPEC-387 / backend SPEC-404: a branch campaign's branch, live days against the days before.
+  branchLift: (campaignId: string): string => `/ads/campaigns/${encodeURIComponent(campaignId)}/branch-lift`,
 } as const;
 
 export const adsQueries = {
@@ -66,6 +70,10 @@ export const adsQueries = {
   accountability: () =>
     defineQuery<AccountabilityData>(["ads", "accountability"], async (api) =>
       adaptAdsAccountability(await api<Payload>(adsPaths.accountability())),
+    ),
+  branchLift: (campaignId: string) =>
+    defineQuery<BranchLift>(["ads", "branch-lift", campaignId], async (api) =>
+      fromApi<BranchLift>(await api(adsPaths.branchLift(campaignId))),
     ),
   platforms: () =>
     defineQuery<AdPlatformsStatus>(["ads", "platforms"], async (api) =>

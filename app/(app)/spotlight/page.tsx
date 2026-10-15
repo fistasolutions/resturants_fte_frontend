@@ -54,6 +54,7 @@ export default async function SpotlightPage({ searchParams }: SpotlightPageProps
     prefetch(queryClient, clarityQueries.blogEngagement());
     prefetch(queryClient, spotlightQueries.refresh());
   } else if (activeTab === "money-pages") prefetch(queryClient, moneyPageQueries.list());
+  else if (activeTab === "local-pages") prefetch(queryClient, spotlightQueries.localPages());
   else if (activeTab === "visibility") {
     prefetch(queryClient, spotlightQueries.visibility());
     prefetch(queryClient, spotlightQueries.strikingDistance());

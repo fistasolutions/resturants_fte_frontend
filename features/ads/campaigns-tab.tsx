@@ -8,6 +8,7 @@ import type { Campaign, CampaignsData, NextCampaign } from "@/types/ads";
 import { formatCurrency } from "@/utils/format";
 
 import { ChannelBadge, ReasonChip, StatusPill } from "./ads-pills";
+import { BranchCampaignPanel } from "./branch-campaign-panel";
 import { CreateCampaignDialog } from "./create-campaign-dialog";
 
 const ROAS_TONE: Record<RoasTone, string> = {
@@ -97,6 +98,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           tone={live ? profitTone : "text-muted-foreground"}
         />
       </div>
+      <BranchCampaignPanel campaign={campaign} />
     </div>
   );
 }

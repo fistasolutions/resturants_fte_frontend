@@ -1630,6 +1630,9 @@ export function adaptAdsCampaigns(raw: Record<string, unknown> | null): Campaign
       cac: num(c.cac),
       profit: num(c.profit),
       revenue: num(c.revenue),
+      branchId: typeof c.branchId === "number" ? c.branchId : null,
+      branchName: typeof c.branchName === "string" ? c.branchName : null,
+      trackingLink: typeof c.trackingLink === "string" ? c.trackingLink : null,
     })),
     recommended: adaptNextCampaign(
       raw?.recommended as Record<string, unknown> | undefined,

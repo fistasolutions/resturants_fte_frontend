@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useWorkspace } from "@/features/workspace/workspace-provider";
+import { useApiQuery } from "@/hooks/use-api-query";
 import { useCan } from "@/hooks/use-can";
 import {
   isValid,
@@ -24,6 +26,7 @@ import {
   type CampaignDraftInput,
   type ValidationErrors,
 } from "@/lib/ads-controls";
+import { restaurantQueries } from "@/lib/queries/restaurant";
 import { createCampaign } from "@/services/ads-actions";
 
 const EMPTY: CampaignDraftInput = {
@@ -89,6 +92,10 @@ export function CreateCampaignDialog() {
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, startTransition] = useTransition();
   const can = useCan();
+  // SPEC-387: a restaurant brand may aim a campaign at one branch (local store marketing).
+  const restaurant = useWorkspace().features.includes("restaurant");
+  const branches = useApiQuery(restaurant && open ? restaurantQueries.branches({ status: "open" }) : null);
+  const [branchId, setBranchId] = useState("");
 
   const set = (key: keyof CampaignDraftInput) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -108,8 +115,10 @@ export function CreateCampaignDialog() {
           offer: form.offer.trim(),
           daily_cap: form.dailyCap.trim(),
           total_cap: form.totalCap.trim() || "0",
+          ...(restaurant && branchId ? { branch_id: Number(branchId) } : {}),
         });
         setForm(EMPTY);
+        setBranchId("");
         setOpen(false);
         router.refresh();
       } catch (cause) {
@@ -152,7 +161,7 @@ export function CreateCampaignDialog() {
             value={form.name}
             onChange={set("name")}
             error={errors.name}
-            placeholder="Fall dresses — prospecting"
+            placeholder={restaurant ? "Downtown — Tuesday pizza night" : "Fall dresses — prospecting"}
           />
           <div className="space-y-1.5">
             <Label htmlFor="channel">Channel</Label>
@@ -187,8 +196,29 @@ export function CreateCampaignDialog() {
             value={form.offer}
             onChange={set("offer")}
             error={errors.offer}
-            placeholder="Fall dresses"
+            placeholder={restaurant ? "Two large pizzas for $20" : "Fall dresses"}
           />
+          {restaurant ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="branch">Branch</Label>
+              <select
+                id="branch"
+                value={branchId}
+                onChange={(event) => setBranchId(event.target.value)}
+                className="h-10 w-full rounded-input border border-input bg-background px-3 text-sm text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <option value="">Every branch (brand campaign)</option>
+                {(branches.data ?? []).map((branch) => (
+                  <option key={branch.id} value={String(branch.id)}>
+                    #{branch.code} {branch.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                A branch campaign is read against that branch&apos;s sales, and its ad link opens the branch&apos;s page.
+              </p>
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             <Field
               id="dailyCap"

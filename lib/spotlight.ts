@@ -23,6 +23,7 @@ export const SPOTLIGHT_TAB_IDS = [
   "published",
   "money-pages",
   "visibility",
+  "local-pages",
 ] as const;
 
 export type SpotlightTab = (typeof SPOTLIGHT_TAB_IDS)[number];
@@ -42,7 +43,17 @@ const SPOTLIGHT_TAB_LABELS: Record<SpotlightTab, string> = {
   published: "Published",
   "money-pages": "Money pages",
   visibility: "Visibility",
+  "local-pages": "Local pages",
 };
+
+/** Tabs only a restaurant brand has (SPEC-386): its branches' pages on its own site. */
+export const RESTAURANT_SPOTLIGHT_TABS: readonly SpotlightTab[] = ["local-pages"];
+
+/** The tabs this organization's bar offers: the restaurant-only ones need the feature. */
+export function spotlightTabsFor(features: readonly string[]): SpotlightTab[] {
+  const restaurant = features.includes("restaurant");
+  return SPOTLIGHT_TAB_IDS.filter((tab) => restaurant || !RESTAURANT_SPOTLIGHT_TABS.includes(tab));
+}
 
 export function spotlightTabLabel(tab: SpotlightTab): string {
   return SPOTLIGHT_TAB_LABELS[tab];

@@ -4,6 +4,7 @@
  * steps and the request bodies; and (SPEC-380) the POS payment choices, change, tenders and the
  * drawer's lines. Prices are never computed here — the backend prices every cart.
  */
+import { attributionBody } from "@/lib/attribution";
 import type {
   Amount,
   CallerLookup,
@@ -239,6 +240,7 @@ export function orderBody(input: OrderInput): Record<string, unknown> {
     gift_card_code: input.giftCardCode || null,
     reward_id: input.rewardId ?? null,
     loyalty_join: input.loyaltyJoin ?? false,
+    attribution: attributionBody(input.attribution),
   };
 }
 

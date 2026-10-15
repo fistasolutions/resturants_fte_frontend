@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 
 import { FolderTabBar, folderTab } from "@/components/shared/folder-tabs";
 import { useVisibleTabs } from "@/features/navigation/nav-prefs-provider";
+import { useWorkspace } from "@/features/workspace/workspace-provider";
 
 import {
-  SPOTLIGHT_TAB_IDS,
   spotlightTabLabel,
+  spotlightTabsFor,
   type SpotlightTab,
 } from "@/lib/spotlight";
 
@@ -16,7 +18,10 @@ import {
  * `bg-primary`. */
 export function SpotlightTabs({ active }: { active: SpotlightTab }) {
   // SPEC-338: the tabs this member switched off in Settings → Sidebar stay out of the bar.
-  const tabs = useVisibleTabs("/spotlight", SPOTLIGHT_TAB_IDS, (tab) => tab, active);
+  // SPEC-386: a restaurant brand's bar adds Local pages.
+  const { features } = useWorkspace();
+  const offered = useMemo(() => spotlightTabsFor(features), [features]);
+  const tabs = useVisibleTabs("/spotlight", offered, (tab) => tab, active);
   return (
     <FolderTabBar role="tablist" label="Search Visibility sections">
       {tabs.map((tab) => {

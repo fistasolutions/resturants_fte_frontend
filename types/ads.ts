@@ -142,6 +142,21 @@ export interface Campaign {
   profit: number;
   /** Attributed revenue, shown alongside profit for the real-margin story. */
   revenue: number;
+  /** SPEC-387 (backend SPEC-404), restaurant brands: the branch the campaign promotes. */
+  branchId?: number | null;
+  branchName?: string | null;
+  /** The path the ad must point at, with its tracking tokens (restaurant brands). */
+  trackingLink?: string | null;
+}
+
+/** A branch campaign's branch sales in its live days against the same days before. */
+export interface BranchLift {
+  branchId: number;
+  days: number;
+  before: { from: string; to: string; netSales: number; orders: number };
+  during: { from: string; to: string; netSales: number; orders: number };
+  /** (during − before) ÷ before; null when before had no sales. */
+  change: number | null;
 }
 
 export interface CampaignsData {

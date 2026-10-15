@@ -2,6 +2,7 @@
  * Restaurant OS view models (frontend SPEC-379 over backend SPEC-392/393/394). Prices and totals
  * are always the backend's; these only carry them.
  */
+import type { Attribution } from "@/lib/attribution";
 
 export type ItemKind = "simple" | "pizza" | "combo";
 export type GroupKind = "toppings" | "choice";
@@ -242,6 +243,8 @@ export interface OrderInput {
   giftCardCode?: string | null;
   rewardId?: number | null;
   loyaltyJoin?: boolean;
+  /** SPEC-387: the ad that brought the guest (online orders only). */
+  attribution?: Attribution | null;
 }
 
 // ── orders ───────────────────────────────────────────────────────────────────

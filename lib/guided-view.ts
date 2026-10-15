@@ -255,6 +255,7 @@ export const TAB_ROUTES: Readonly<Record<string, TabRoute>> = {
     ["published", "Published"],
     ["money-pages", "Money pages"],
     ["visibility", "Visibility"],
+    ["local-pages", "Local pages"],
   ]),
   ads: route("/ads", "query", [
     ["overview", "Overview"],

@@ -68,6 +68,8 @@ export async function createCampaign(input: {
   offer: string;
   daily_cap: string;
   total_cap: string;
+  /** SPEC-387: a restaurant brand's branch campaign. */
+  branch_id?: number;
 }): Promise<{ id: number; status: string }> {
   return post("/ads/campaigns", input);
 }

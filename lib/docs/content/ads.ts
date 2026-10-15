@@ -8,7 +8,7 @@ export const adsDoc = defineDoc({
   tagline: "The AI media buyer's control room — profit-aware campaign proposals grounded in Shopify data, with human-gated spend, a monthly cap, a real kill switch and an audit ledger.",
   sources: ["Shopify"],
   refresh: "Proposals every morning at 05:30 UTC; guardrails every 15 minutes",
-  updated: "2026-10-09",
+  updated: "2026-10-16",
   hero: "ads",
   heroCaption:
     "Paid Ads Manager overview: the budget strip with the monthly cap and kill switch, campaign KPIs, and the source-behaviour card explaining how spend decisions are made.",
@@ -74,6 +74,8 @@ export const adsDoc = defineDoc({
       details: [
         "A draft only goes live through an approved gate.",
         "Validation is strict: name required, caps non-negative, daily cap never above the total.",
+        "For a restaurant brand, a campaign is judged on the brand's own online orders: the ad link carries the campaign's tracking tokens, the ordering site keeps them for the visit, and the order that follows is credited to the campaign. Revenue is the order lines' sales less discounts; food cost comes from the menu's costs, and profit is revenue less known food cost.",
+        "A restaurant brand's card also shows the branch the campaign promotes, that branch's net sales and orders since launch against the same number of days before (before launch, the last fortnight against the one before), and the Ad link with Copy — the branch's published local page when it has one, otherwise the ordering page.",
       ],
       screen: "ads-campaigns",
     },
@@ -81,7 +83,10 @@ export const adsDoc = defineDoc({
       title: "New campaign",
       route: "/ads?tab=campaigns",
       summary: "The create dialog — name, daily cap, total cap — which saves a draft.",
-      details: ["The copy states that a draft spends nothing until a gate is approved."],
+      details: [
+        "The copy states that a draft spends nothing until a gate is approved.",
+        "A restaurant brand also picks a Branch — one open branch for local store marketing, or every branch for a brand campaign.",
+      ],
       screen: "ads-new-campaign",
     },
     {

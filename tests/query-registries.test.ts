@@ -80,7 +80,7 @@ const REGISTRIES: Array<{
   paths: Record<string, (...args: never[]) => string>;
   defs: QueryDef<unknown>[];
 }> = [
-  { domain: "ads", paths: adsPaths, defs: [adsQueries.budget(), adsQueries.overview(), adsQueries.campaigns(), adsQueries.creative(), adsQueries.spendGates(), adsQueries.accountability(), adsQueries.platforms(), adsQueries.platformPerformance(30), adsQueries.platformAudit(7)] },
+  { domain: "ads", paths: adsPaths, defs: [adsQueries.budget(), adsQueries.overview(), adsQueries.campaigns(), adsQueries.creative(), adsQueries.spendGates(), adsQueries.accountability(), adsQueries.platforms(), adsQueries.platformPerformance(30), adsQueries.platformAudit(7), adsQueries.branchLift("1")] },
   { domain: "ai-value", paths: aiValuePaths, defs: [aiValueQueries.overview("30d"), aiValueQueries.caps(), aiValueQueries.trace("t/1")] },
   {
     domain: "analysis",
@@ -154,7 +154,7 @@ const REGISTRIES: Array<{
   { domain: "results", paths: resultPaths, defs: [resultQueries.results(), resultQueries.ledger(), resultQueries.managers(), resultQueries.reportCard(7)] },
   { domain: "returns", paths: returnPaths, defs: [returnQueries.metrics({ ...RANGE, compare: "none" }), returnQueries.fixes(RANGE), returnQueries.overview(RANGE), returnQueries.byStyle(RANGE), returnQueries.bySize(RANGE), returnQueries.byCategory(RANGE), returnQueries.styleDetail(8, RANGE), returnQueries.bracketing(RANGE)] },
   { domain: "social", paths: socialPaths, defs: [socialQueries.overview(), socialQueries.studioProducts(), socialQueries.approvals(), socialQueries.calendar(), socialQueries.performance()] },
-  { domain: "spotlight", paths: spotlightPaths, defs: [spotlightQueries.overview(), spotlightQueries.brandBrain(), spotlightQueries.queries(), spotlightQueries.inboundTopics(), spotlightQueries.dailyPicks(), spotlightQueries.dailyPicksForDate("2026-09-10"), spotlightQueries.dailyPicksHistory(), spotlightQueries.drafts(), spotlightQueries.draft("my-post"), spotlightQueries.approvals(), spotlightQueries.published(), spotlightQueries.unpublished(), spotlightQueries.journeyCoverage(), spotlightQueries.visibility(), spotlightQueries.strikingDistance()] },
+  { domain: "spotlight", paths: spotlightPaths, defs: [spotlightQueries.overview(), spotlightQueries.brandBrain(), spotlightQueries.queries(), spotlightQueries.inboundTopics(), spotlightQueries.dailyPicks(), spotlightQueries.dailyPicksForDate("2026-09-10"), spotlightQueries.dailyPicksHistory(), spotlightQueries.drafts(), spotlightQueries.draft("my-post"), spotlightQueries.approvals(), spotlightQueries.published(), spotlightQueries.unpublished(), spotlightQueries.journeyCoverage(), spotlightQueries.visibility(), spotlightQueries.strikingDistance(), spotlightQueries.localPages()] },
   { domain: "store", paths: storePaths, defs: [storeQueries.currentUser(), storeQueries.connection(), storeQueries.systemStatus(), storeQueries.settingsOverview()] },
   { domain: "system", paths: systemPaths, defs: [systemQueries.jobs(), systemQueries.runs({ jobId: "j", status: "error", window: "7d", page: 2 }), systemQueries.run(4)] },
   { domain: "tax-reports", paths: taxReportPaths, defs: [taxReportQueries.list(), taxReportQueries.detail(3), taxReportQueries.rows(3)] },

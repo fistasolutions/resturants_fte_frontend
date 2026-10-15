@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Bike, LocateFixed, MapPin, ShoppingBag, Store } from "lucide-react";
@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FormError } from "@/features/restaurant/parts";
 import { CartPanel } from "@/features/restaurant-os/cart-panel";
 import { ItemBuilder } from "@/features/restaurant-os/item-builder";
+import { currentAttribution, rememberAttribution } from "@/features/storefront/attribution-store";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { storefrontQueries } from "@/lib/queries/storefront";
 import { quoteKeyLines } from "@/lib/restaurant-os";
@@ -139,7 +140,7 @@ function Checkout({
     setBusy(true);
     setError(null);
     try {
-      const order = await placePublicOrder(slug, input);
+      const order = await placePublicOrder(slug, { ...input, attribution: currentAttribution(slug) });
       // SPEC-380: a card payment happens on Stripe's own page; the tracker takes over after it.
       if (order.checkoutUrl) {
         window.location.assign(order.checkoutUrl);
@@ -275,6 +276,8 @@ function Checkout({
 /** The brand's own online ordering (SPEC-379 over backend SPEC-394). */
 export function StorefrontView({ slug }: { slug: string }) {
   const brand = usePublicQuery(storefrontQueries.brand(slug));
+  // SPEC-387: keep the ad that brought the guest for the whole visit.
+  useEffect(() => rememberAttribution(slug), [slug]);
   const [mode, setMode] = useState<Mode | null>(null);
   const [postal, setPostal] = useState("");
   const [searched, setSearched] = useState<string | null>(null);

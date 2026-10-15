@@ -7,6 +7,7 @@ import { PauseCircle, X } from "lucide-react";
 import { FolderPanel } from "@/components/shared/folder-tabs";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmployeeBreadcrumb } from "@/features/employees/employee-breadcrumb";
+import { useWorkspace } from "@/features/workspace/workspace-provider";
 import { AdsTabs } from "@/features/ads/ads-tabs";
 import { BudgetStrip } from "@/features/ads/budget-strip";
 import { useCan } from "@/hooks/use-can";
@@ -40,6 +41,8 @@ export function AdsShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  // SPEC-387: a restaurant brand's ads are read against its own online orders, not Shopify.
+  const restaurant = useWorkspace().features.includes("restaurant");
   const searchParams = useSearchParams();
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +97,7 @@ export function AdsShell({
         <EmployeeBreadcrumb current="Paid Ads Manager" />
         <PageHeader
           title="Paid Ads Manager"
-          description="Your AI media buyer for Meta and Google. It proposes profit-aware campaigns grounded in your Shopify data, but never spends on its own — you approve every launch and budget raise, and hard caps plus a kill-switch keep every dollar accountable."
+          description={`Your AI media buyer for Meta and Google. It proposes profit-aware campaigns grounded in ${restaurant ? "your branches' own online orders" : "your Shopify data"}, but never spends on its own — you approve every launch and budget raise, and hard caps plus a kill-switch keep every dollar accountable.`}
         />
       </div>
 

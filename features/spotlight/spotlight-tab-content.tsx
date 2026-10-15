@@ -5,6 +5,7 @@ import { DailyPicksTab } from "@/features/spotlight/daily-picks-tab";
 import { SpotlightChatTab } from "@/features/spotlight/employee-chat/spotlight-chat-tab";
 import { InboundAdvanced } from "@/features/spotlight/inbound-advanced";
 import { InboundEngineTab } from "@/features/spotlight/inbound-engine-tab";
+import { LocalPagesTab } from "@/features/spotlight/local-pages-tab";
 import { MoneyPagesView } from "@/features/money-pages/money-pages-view";
 import { OverviewTab } from "@/features/spotlight/overview-tab";
 import { PublishedTab } from "@/features/spotlight/published-tab";
@@ -57,6 +58,8 @@ export function SpotlightTabContent({ activeTab, date }: { activeTab: SpotlightT
   // page redirects `?tab=brand-brain` there, so it never renders here.
   // The employee's chat (SPEC-293) owns its own reads through `useEmployeeChat`.
   if (activeTab === "chat") return <SpotlightChatTab />;
+  // SPEC-386: a restaurant brand's local pages own their reads.
+  if (activeTab === "local-pages") return <LocalPagesTab />;
   if (activeTab === "inbound") {
     if (inbound.isPending) return <SpotlightContentSkeleton />;
     if (inbound.isError) return <Failed />;

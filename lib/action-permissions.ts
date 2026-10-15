@@ -189,6 +189,12 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   // services/klaviyo-connect-actions.ts
   "klaviyo-connect-actions:disconnectKlaviyoOAuth": ["integrations.manage"],
   "klaviyo-connect-actions:startKlaviyoConnect": ["integrations.manage"],
+  // services/local-pages-actions.ts (SPEC-386; backend SPEC-403)
+  "local-pages-actions:editLocalPage": ["spotlight.manage"],
+  "local-pages-actions:publishLocalPage": ["spotlight.publish"],
+  "local-pages-actions:unpublishLocalPage": ["spotlight.publish"],
+  "local-pages-actions:writeLocalPage": ["spotlight.manage"],
+  "local-pages-actions:writeMissingLocalPages": ["spotlight.manage"],
   // services/manager-report-card.ts
   "manager-report-card:sendReportCard": ["messages.send", "results.view"],
   "manager-report-card:updateManagerReportCard": ["settings.manage"],

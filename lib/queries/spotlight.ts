@@ -29,6 +29,8 @@ import {
 import { adaptInboundTopics, type ApiInboundTopics } from "@/lib/inbound-topics";
 import { adaptRefresh, type ApiRefresh, type RefreshData } from "@/lib/refresh-loop";
 import { defineQuery, type ApiGet } from "@/lib/query-def";
+import { fromApi } from "@/lib/restaurant-api";
+import type { LocalPagesData } from "@/types/local-pages";
 import type {
   BlogDraft,
   BlogDraftStatus,
@@ -63,6 +65,8 @@ export const spotlightPaths = {
   visibility: (): string => "/spotlight/visibility",
   /** Backend SPEC-264: the store's page-two opportunities from the latest snapshot. */
   strikingDistance: (limit = 10): string => `/spotlight/striking-distance?limit=${limit}`,
+  /** Backend SPEC-403: a restaurant brand's local pages, one per branch. */
+  localPages: (): string => "/spotlight/local-pages",
 } as const;
 
 export async function loadQueries(api: ApiGet): Promise<SpotlightQuery[]> {
@@ -157,6 +161,11 @@ export const spotlightQueries = {
   refresh: () =>
     defineQuery<RefreshData>(["spotlight", "refresh"], async (api) =>
       adaptRefresh(await api<ApiRefresh>(spotlightPaths.refresh())),
+    ),
+  /** Local pages (frontend SPEC-386 / backend SPEC-403) — a restaurant brand only. */
+  localPages: () =>
+    defineQuery<LocalPagesData>(["spotlight", "local-pages"], async (api) =>
+      fromApi<LocalPagesData>(await api(spotlightPaths.localPages())),
     ),
   /** Striking distance (backend SPEC-264) — local snapshot rows only. */
   strikingDistance: () =>

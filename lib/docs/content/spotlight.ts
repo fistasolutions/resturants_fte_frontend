@@ -8,7 +8,7 @@ export const spotlightDoc = defineDoc({
   tagline: "The brand-visibility engine — a cited Brand Brain, an SEO content pipeline that writes long-form articles, human approval, publishing to the storefront blog, and measured reach.",
   sources: ["Shopify", "Google Search Console", "AI model providers"],
   refresh: "Daily picks refresh nightly; Search Console reach syncs nightly at 04:00 UTC",
-  updated: "2026-10-09",
+  updated: "2026-10-16",
   hero: "spotlight",
   heroCaption:
     "Search Visibility's Overview: the five-stage visibility pipeline, drafts awaiting review, published posts, reach and attributed revenue, recent activity and next best actions.",
@@ -331,6 +331,20 @@ export const spotlightDoc = defineDoc({
         "The list is read once a day and served from that read, so opening the tab repeatedly costs nothing, and filtering, searching, sorting and paging never send a request. When Search Console is not connected the tab says so and what connecting would give you.",
       ],
       screen: "spotlight-published",
+    },
+    {
+      title: "Local pages",
+      route: "/spotlight?tab=local-pages",
+      summary:
+        "Restaurant brands only: one page per branch on the brand's own site, the page a hungry person lands on from \u201cpizza delivery in <town>\u201d.",
+      details: [
+        "The tab appears only for a restaurant brand. It lists every branch that is not closed, with whether it has a page and whether that page is published; tiles count branches, pages written and pages published.",
+        "Write (or Rewrite) has the writer draft the page from the branch's name, town and street, its hours, whether it delivers and does carryout, and the names of the dishes its guests ordered most in the last 30 days. It writes in the brand's voice from the Brand Brain and is never given a price or a sales figure. If the writer is unavailable, a plain page is written from the same facts and marked Plain. Write the missing pages drafts every branch without one, three at a time.",
+        "Edit changes the headline, the intro, the search title (60 characters) and the search description (155 characters), with a counter on each. Rewriting a page returns it to Draft.",
+        "Publish puts the page on the brand's site at /r/<brand>/<branch>; Unpublish takes it down. Only an open branch's page can be published. A franchise member sees and works on its own branches only.",
+        "The public page shows the copy above the branch's own address with a directions link, phone, open now, delivery and carryout, the week's hours and up to eight favourites with their menu prices — all read from the branch when the page is served, so a page never shows a stale price or hour. It carries schema.org Restaurant markup for Google, and /r/<brand>/sitemap.xml lists every published page. /r/<brand> lists every location with an Order online button.",
+        "A restaurant brand does not publish articles to a Shopify blog: that button answers that the brand publishes on its own site. This tab shipped before its capture exists; it gets its screen on the next capture run.",
+      ],
     },
     {
       title: "The article on the storefront",
