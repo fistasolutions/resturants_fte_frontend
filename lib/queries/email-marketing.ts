@@ -5,6 +5,8 @@
  * backend: no read here reaches Klaviyo.
  */
 import { defineQuery } from "@/lib/query-def";
+import { fromApi } from "@/lib/restaurant-api";
+import type { GuestAudience } from "@/types/guest-audiences";
 import type {
   ActivityEntry,
   Approval,
@@ -33,6 +35,8 @@ export const emailMarketingPaths = {
   flows: (): string => `${BASE}/flows`,
   flow: (id: string): string => `${BASE}/flows/${encodeURIComponent(id)}`,
   audiences: (): string => `${BASE}/audiences`,
+  /** SPEC-388 / backend SPEC-405: a restaurant brand's guest audiences. */
+  guestAudiences: (): string => `${BASE}/guest-audiences`,
   content: (): string => `${BASE}/content`,
   discountCodes: (): string => `${BASE}/discount-codes`,
   approvals: (): string => `${BASE}/approvals`,
@@ -57,6 +61,10 @@ export const emailMarketingQueries = {
   flows: () => defineQuery<Flow[]>(key("flows"), (api) => api<Flow[]>(emailMarketingPaths.flows())),
   flow: (id: string) => defineQuery<Flow>(key("flow", id), (api) => api<Flow>(emailMarketingPaths.flow(id))),
   audiences: () => defineQuery<Audience[]>(key("audiences"), (api) => api<Audience[]>(emailMarketingPaths.audiences())),
+  guestAudiences: () =>
+    defineQuery<GuestAudience[]>(key("guest-audiences"), async (api) =>
+      fromApi<{ audiences: GuestAudience[] }>(await api(emailMarketingPaths.guestAudiences())).audiences,
+    ),
   content: () => defineQuery<EmailContent>(key("content"), (api) => api<EmailContent>(emailMarketingPaths.content())),
   discountCodes: () => defineQuery<DiscountCode[]>(key("discount-codes"), (api) => api<DiscountCode[]>(emailMarketingPaths.discountCodes())),
   approvals: () => defineQuery<Approval[]>(key("approvals"), (api) => api<Approval[]>(emailMarketingPaths.approvals())),

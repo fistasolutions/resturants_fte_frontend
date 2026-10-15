@@ -80,6 +80,16 @@ export function fetchProductDrafts(
   );
 }
 
+/** SPEC-389: a restaurant brand's drafts for one menu item (latest per channel). */
+export function fetchMenuDrafts(itemId: string): Promise<ProductDraftsResult> {
+  return send<ProductDraftsResult>("GET", `/social/menu/items/${itemId}/drafts`);
+}
+
+/** SPEC-389: brand-voice drafts about a menu item, one `in_review` draft per channel. */
+export function generateMenuPost(itemId: string, channels: string[]): Promise<GenerateResult> {
+  return post<GenerateResult>("/social/menu/generate", { menuItemId: Number(itemId), channels });
+}
+
 /** Generate brand-voice creative for a product, one persisted `in_review` draft
  * per requested channel — the "Create" step (SPEC-133). `channels` is a subset
  * of ["instagram","facebook"]; the backend defaults to both if omitted. */

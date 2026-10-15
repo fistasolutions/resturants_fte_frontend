@@ -156,6 +156,7 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "email-marketing-actions:setKillSwitch": ["email_marketing.manage"],
   "email-marketing-actions:setProgramAutonomy": ["email_marketing.manage", "email_marketing.send"],
   "email-marketing-actions:syncAudience": ["email_marketing.manage"],
+  "email-marketing-actions:syncGuestAudience": ["email_marketing.manage"],
   "email-marketing-actions:syncNow": ["email_marketing.manage"],
   // services/employees-actions.ts
   "employees-actions:setEmployeeActive": ["settings.manage"],
@@ -328,6 +329,7 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "social-actions:generatePlanSlot": ["social.manage"],
   "social-actions:generatePostImage": ["social.manage"],
   "social-actions:generateSharedImage": ["social.manage"],
+  "social-actions:generateMenuPost": ["social.manage"],
   "social-actions:generateSocialPost": ["social.manage"],
   "social-actions:generateWeeklyPlan": ["social.manage"],
   "social-actions:markPostPosted": ["social.publish"],

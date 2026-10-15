@@ -22,7 +22,9 @@ import {
 } from "@/lib/social-studio";
 import { draftToPostDetail, imageFailure } from "@/lib/social-post";
 import {
+  fetchMenuDrafts,
   fetchProductDrafts,
+  generateMenuPost,
   generateSharedImage,
   generateSocialPost,
 } from "@/services/social-actions";
@@ -37,9 +39,11 @@ import { CategoryNavRail } from "./category-nav-rail";
 import { PostDetail } from "./post-detail";
 import { PreviewImage } from "./preview-image";
 import { ReasonChip } from "./social-pills";
+import { MenuBrowser } from "./menu-browser";
 import { StudioProductBrowser } from "./studio-product-browser";
 import { WeeklyPlansPanel } from "./weekly-plans-panel";
 import { GlispIcon } from "@/components/shared/glisp-icon";
+import { useWorkspace } from "@/features/workspace/workspace-provider";
 
 /* ── Channel selector (SPEC-133) ─────────────────────────────────────────── */
 
@@ -152,7 +156,7 @@ function GhostPreview({
   );
 }
 
-function StudioWorkspace({ product }: { product: StudioProduct }) {
+function StudioWorkspace({ product, menu = false }: { product: StudioProduct; menu?: boolean }) {
   const router = useRouter();
   const [selection, setSelection] = useState<ChannelSelection>("both");
   const [status, setStatus] = useState<"idle" | "generating" | "error">("idle");
@@ -171,7 +175,8 @@ function StudioWorkspace({ product }: { product: StudioProduct }) {
   // Instagram/Facebook drafts reappear instead of being lost (SPEC-134 bug fix).
   useEffect(() => {
     let active = true;
-    fetchProductDrafts(product.id)
+    // SPEC-389: a restaurant brand's dish keys its drafts by menu item.
+    (menu ? fetchMenuDrafts(product.id) : fetchProductDrafts(product.id))
       .then((res) => {
         if (active) setDrafts(sortDrafts(res.posts));
       })
@@ -181,7 +186,7 @@ function StudioWorkspace({ product }: { product: StudioProduct }) {
     return () => {
       active = false;
     };
-  }, [product.id]);
+  }, [product.id, menu]);
 
   async function generateSharedImageForAll(postIds: string[]) {
     setSharedBusy(true);
@@ -206,7 +211,9 @@ function StudioWorkspace({ product }: { product: StudioProduct }) {
     setStatus("generating");
     setError(null);
     try {
-      const res = await generateSocialPost(product.id, requested);
+      const res = menu
+        ? await generateMenuPost(product.id, requested)
+        : await generateSocialPost(product.id, requested);
       const incoming: ProductDraft[] = res.posts.map((post) => ({
         ...post,
         // SPEC-136: the overwrite path can preserve an existing image across a
@@ -475,12 +482,16 @@ export function ContentStudioTab({ initial }: { initial: StudioProductsPage }) {
   }
 
   const showBrowser = !selected && !planMode;
+  // SPEC-389: a restaurant brand posts about dishes from its menu, not products.
+  const restaurant = useWorkspace().features.includes("restaurant");
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Plan the whole week at once, or browse products to draft one at a time.
+          {restaurant
+            ? "Plan the whole week at once, or pick a dish to draft one post at a time."
+            : "Plan the whole week at once, or browse products to draft one at a time."}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={openWeeklyPlans}>
@@ -494,18 +505,22 @@ export function ContentStudioTab({ initial }: { initial: StudioProductsPage }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[13rem_1fr]">
-        <CategoryNavRail category={category} onSelect={selectCategory} />
+      <div className={cn("grid grid-cols-1 gap-4", !restaurant && "lg:grid-cols-[13rem_1fr]")}>
+        {restaurant ? null : <CategoryNavRail category={category} onSelect={selectCategory} />}
         <div className="min-w-0">
           {/* Kept mounted (hidden) behind the other modes so returning restores
               the same page/scroll without a refetch. */}
           <div className={showBrowser ? undefined : "hidden"}>
-            <StudioProductBrowser
-              key={category}
-              category={category}
-              initial={initial}
-              onSelectProduct={setSelected}
-            />
+            {restaurant ? (
+              <MenuBrowser onSelect={setSelected} />
+            ) : (
+              <StudioProductBrowser
+                key={category}
+                category={category}
+                initial={initial}
+                onSelectProduct={setSelected}
+              />
+            )}
           </div>
           {selected && !planMode && (
             <div className="space-y-4">
@@ -516,10 +531,10 @@ export function ContentStudioTab({ initial }: { initial: StudioProductsPage }) {
                 onClick={() => setSelected(null)}
               >
                 <ArrowLeft className="size-4" aria-hidden />
-                Back to products
+                {restaurant ? "Back to the menu" : "Back to products"}
               </Button>
               {/* Keyed on product id so switching products remounts the workspace. */}
-              <StudioWorkspace key={selected.id} product={selected} />
+              <StudioWorkspace key={selected.id} product={selected} menu={restaurant} />
             </div>
           )}
           {/* Kept mounted (hidden) so the plan/history hydrates once and persists

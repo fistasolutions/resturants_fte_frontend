@@ -11,6 +11,8 @@
  */
 import { apiErrorFromResponse } from "@/lib/api-error";
 import { proxyUrl } from "@/lib/client-api";
+import { fromApi } from "@/lib/restaurant-api";
+import type { GuestAudienceSync } from "@/types/guest-audiences";
 import type {
   AutonomyLevel,
   CampaignGoal,
@@ -126,6 +128,11 @@ export function saveFlowMessage(flowId: string, messageId: string, subject: stri
 }
 
 /** `POST /audiences/{key}/sync` — mirrors a segment's consented members to a Klaviyo list. */
+/** SPEC-388: send a restaurant guest audience to Klaviyo — properties only, never consent. */
+export async function syncGuestAudience(key: string): Promise<GuestAudienceSync> {
+  return fromApi<GuestAudienceSync>(await call("POST", `/guest-audiences/${id(key)}/sync`));
+}
+
 export function syncAudience(key: string): Promise<{ externalId: string; added: number; removed: number }> {
   return call("POST", `/audiences/${id(key)}/sync`);
 }

@@ -8,7 +8,7 @@ export const socialDoc = defineDoc({
   tagline: "The organic social manager — it turns the catalog into posts, reels and carousels in the brand voice, plans the week, routes everything through you, publishes to Meta, and measures what it earned.",
   sources: ["Shopify", "Meta (Instagram / Facebook)", "AI model providers"],
   refresh: "Weekly plan drafted Mondays 03:15 UTC; publishing every 15 minutes; Meta insights nightly",
-  updated: "2026-10-06",
+  updated: "2026-10-16",
   hero: "social",
   heroCaption:
     "Social Media Manager's Overview: the Plan → Create → Approve → Publish → Measure pipeline, posts created and awaiting approval, the data-picked 'what to post next', and recent activity.",
@@ -61,6 +61,7 @@ export const socialDoc = defineDoc({
         "The creation screen: a category rail and product browser on the left, the per-platform post with its creative, caption and versions on the right, and the weekly plan board.",
       details: [
         "Categories are commerce signals — best-seller momentum, new drops, clear dead stock, occasions — plus full-catalog search.",
+        "A restaurant brand picks dishes instead of products: the menu's best sellers over the last 30 days, dishes worth pushing (a menu margin of 65% or more but selling less than most) and dishes new on the menu this month, each with the reason, filtered by those three. A post about a dish goes through the same writer, images, approvals, calendar and publishing as any post.",
         "Generate an image, a reel, a UGC video or a carousel; each runs in the background with its own progress toast, and two jobs can run at once.",
         "Captions are editable per platform; Refine sends a note to the writer. Download, copy caption and upload-your-own-photo are one click.",
         "The version rail keeps every generated creative; unwanted versions can be deleted.",

@@ -9,7 +9,7 @@ export const emailMarketingDoc = defineDoc({
     "The email and SMS employee: plans, audiences, campaigns, flows and tests run through your own email platform — judged by the profit each send caused, not the revenue it claims.",
   sources: ["Klaviyo", "Shopify", "Brand Brain"],
   refresh: "Campaigns, flows and lists hourly; profiles daily; reports, holdout results and the plan nightly",
-  updated: "2026-10-14",
+  updated: "2026-10-16",
   hero: "employees",
   heroCaption:
     "The Email Marketing Manager's overview and its eleven tabs.",
@@ -91,6 +91,8 @@ export const emailMarketingDoc = defineDoc({
       details: [
         "Slipping holds repeat customers past their own reorder rhythm but not yet lost: each customer's rhythm is the average gap between their orders, and a customer is slipping once the time since their last order passes one and a half times that gap (or the gap plus a week, whichever is later), until three times the gap (or 60 days). Due a second order holds one-time customers at the point most customers come back — between the store's usual first-to-second-order gap and twice it; it stays empty until at least 20 customers have a second order to measure. Both can be chosen in a campaign and synced to Klaviyo like any segment, and the plan proposes a win-back to Slipping once it holds 25 customers.",
         "Sync to Klaviyo mirrors a segment's consented members onto a Klaviyo list — adding new ones and removing those who left — with the time of the last sync. Consent is read from Klaviyo and is never changed here; the only profiles ever subscribed are your own seed addresses.",
+        "A restaurant brand sees Guest audiences first, built from its own orders: Came once (one order 14 to 60 days ago), Lapsed 30, 60 and 90+ days (two or more orders, last order in that band), Regulars (four or more orders in 90 days), Top spenders (the top 10% by spend over a year) and one audience per branch (guests who order most there). Each shows its guests, how many have an email and how many opted in on the brand's site.",
+        "Send to Klaviyo gives each opted-in guest's Klaviyo profile its audiences, home branch and last order date, then keeps a Klaviyo list of the audience's guests who are already subscribed in Klaviyo. Nobody is subscribed here; the answer says how many opted in on your site are not yet subscribed in Klaviyo.",
       ],
     },
     {

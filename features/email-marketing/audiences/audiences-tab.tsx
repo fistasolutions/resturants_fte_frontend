@@ -7,8 +7,10 @@ import { QueryErrorState } from "@/components/shared/query-error-state";
 import { RoleButton } from "@/components/shared/role-gate";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Input } from "@/components/ui/input";
+import { GuestAudiences } from "@/features/email-marketing/audiences/guest-audiences";
 import { ListSkeleton } from "@/features/email-marketing/skeletons";
 import { useEmailMarketingActions } from "@/features/email-marketing/use-email-marketing-actions";
+import { useWorkspace } from "@/features/workspace/workspace-provider";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { useCan } from "@/hooks/use-can";
 import { clampPage, pageCount, paginate } from "@/lib/catalog-pagination";
@@ -153,6 +155,8 @@ export function AudiencesTab() {
   const workspace = useApiQuery(emailMarketingQueries.workspace());
   const actions = useEmailMarketingActions();
   const can = useCan();
+  // SPEC-388: a restaurant brand's audiences come from its own guests.
+  const restaurant = useWorkspace().features.includes("restaurant");
   if (audiences.isPending || workspace.isPending) return <ListSkeleton rows={8} />;
   if (audiences.isError) return <QueryErrorState error={audiences.error} onRetry={() => void audiences.refetch()} />;
   if (workspace.isError) return <QueryErrorState error={workspace.error} onRetry={() => void workspace.refetch()} />;
@@ -171,6 +175,7 @@ export function AudiencesTab() {
         Consent comes from {name} and is never changed here. Syncing a segment mirrors its consented members onto a {name} list — adding and removing profiles — and never subscribes anyone.
       </p>
       {actions.error ? <p role="alert" className="text-sm text-destructive">{actions.error}</p> : null}
+      {restaurant ? <GuestAudiences disabledReason={syncGate.allowed ? null : (syncGate.reason ?? null)} /> : null}
       <section className="space-y-2">
         <h2 className="text-sm font-semibold">{PRODUCT.short} segments</h2>
         {!syncGate.allowed ? <p className="text-sm text-muted-foreground">{syncGate.reason}</p> : null}
