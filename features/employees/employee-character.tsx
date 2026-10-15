@@ -154,6 +154,14 @@ function Hair({ kind }: { kind: CharacterKind }) {
           <circle cx={53} cy={75} r={3} fill={STROKE} />
         </>
       );
+    case "stopwatch":
+      // A sweatband over a short crop — the coach (SPEC-385).
+      return (
+        <>
+          <path d="M37 41 Q39 22 64 22 Q89 22 91 41 Q82 33 64 33 Q46 33 37 41 Z" fill={STROKE} />
+          <path d="M35 36 Q64 26 93 36 L93 42 Q64 32 35 42 Z" fill={ACCENT} stroke={STROKE} strokeWidth={1.8} />
+        </>
+      );
     case "envelope":
       // A high ponytail (SPEC-345).
       return (
@@ -241,6 +249,18 @@ function Prop({ kind }: { kind: CharacterKind }) {
             <rect x={99} y={84} width={9} height={30} rx={3} fill={FILL} stroke={STROKE} strokeWidth={2.2} transform="rotate(28 103.5 99)" />
             <path d="M107 112 L104 122 L99 114 Z" fill={ACCENT} transform="rotate(28 103.5 99)" />
           </g>
+        </g>
+      );
+    case "stopwatch":
+      // SPEC-385: a stopwatch whose hand sweeps while the card is active.
+      return (
+        <g className="emp-prop emp-prop-stopwatch">
+          <rect x={106} y={6} width={8} height={6} rx={2} fill={STROKE} />
+          <circle cx={110} cy={26} r={14} fill={FILL} stroke={STROKE} strokeWidth={2.4} />
+          <g className="emp-dot" style={{ transformOrigin: "110px 26px" }}>
+            <path d="M110 26 L110 16" stroke={ACCENT} strokeWidth={2.4} strokeLinecap="round" />
+          </g>
+          <circle cx={110} cy={26} r={2} fill={STROKE} />
         </g>
       );
     case "headset":

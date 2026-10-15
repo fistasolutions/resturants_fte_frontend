@@ -11,6 +11,8 @@ import type {
   BranchMenu,
   BranchService,
   CashDrawer,
+  CoachDay,
+  CoachEmailResult,
   DeliveryZone,
   DriverLink,
   CatalogCategory,
@@ -355,4 +357,14 @@ export function revokeDriverLink(driverId: number): Promise<void> {
 
 export function dispatchRun(driverId: number, orderIds: number[]): Promise<{ orders: NativeOrder[] }> {
   return send("POST", "/restaurant/kitchen/dispatch", { driver_id: driverId, order_ids: orderIds }, "Sending the run out failed");
+}
+
+// ── the Ops Coach (SPEC-385 / backend SPEC-402) ──────────────────────────────
+
+export function runOpsCoach(date: string | null): Promise<CoachDay> {
+  return send("POST", "/restaurant/coach/run", { date }, "Running the Ops Coach failed");
+}
+
+export function emailOpsCoach(date: string): Promise<CoachEmailResult> {
+  return send("POST", "/restaurant/coach/email", { date }, "Emailing the briefs failed");
 }

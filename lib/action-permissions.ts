@@ -253,6 +253,8 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "restaurant-os-actions:createZone": ["branch.manage"],
   "restaurant-os-actions:deleteZone": ["branch.manage"],
   "restaurant-os-actions:dispatchRun": ["kitchen.operate"],
+  "restaurant-os-actions:emailOpsCoach": ["network.manage"],
+  "restaurant-os-actions:runOpsCoach": ["network.manage"],
   "restaurant-os-actions:issueDriverLink": ["kitchen.operate"],
   "restaurant-os-actions:revokeDriverLink": ["kitchen.operate"],
   "restaurant-os-actions:updateZone": ["branch.manage"],

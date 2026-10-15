@@ -58,6 +58,7 @@ describe("characters", () => {
       "customer_support",
       "email_marketing",
       "finance",
+      "ops_coach",
       "report-fte",
       "social",
       "spotlight",

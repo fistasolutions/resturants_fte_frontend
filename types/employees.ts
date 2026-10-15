@@ -12,7 +12,9 @@ export type EmployeeKey =
   | "finance"
   | "report-fte"
   | "email_marketing"
-  | "customer_support";
+  | "customer_support"
+  /** SPEC-385: a restaurant brand's own employee (backend SPEC-402). */
+  | "ops_coach";
 
 export type FigureKind = "count" | "money";
 

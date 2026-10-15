@@ -58,6 +58,13 @@ export const LOYALTY_PAGE = {
   periodTabs: [] as string[],
 } as const;
 
+export const OPS_COACH_PAGE = {
+  base: "/ops-coach",
+  title: "Ops Coach",
+  description: "Every morning, each branch's one thing to fix today — and the branches head office should call first.",
+  periodTabs: [] as string[],
+} as const;
+
 export const CASH_PAGE = {
   base: "/cash",
   title: "Cash & Day Close",

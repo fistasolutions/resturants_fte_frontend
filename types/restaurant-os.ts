@@ -702,3 +702,47 @@ export interface DriverApp {
   run: DriverStop[];
   location: { lat: number | null; lng: number | null; locatedAt: string | null };
 }
+
+// ── the Ops Coach (SPEC-385 / backend SPEC-402) ──────────────────────────────
+
+export type CoachFocus = "silent" | "late" | "voids" | "labor" | "sales" | "ticket" | "on_track";
+
+export interface CoachBrief {
+  id: number;
+  branchId: number;
+  focus: CoachFocus;
+  focusLabel: string;
+  severity: number;
+  text: string;
+  wins: string[];
+  facts: {
+    code: string;
+    name: string;
+    netSales: number;
+    lastWeekNetSales: number | null;
+    change: number | null;
+    transactions: number;
+    averageTicket: number | null;
+    onTimeRate: number | null;
+    deliveriesTimed: number;
+    avgDeliveryMinutes: number | null;
+    laborPct: number | null;
+    voids: number;
+    voidValue: number;
+  };
+  emailedAt: string | null;
+  hasManagerEmail: boolean;
+}
+
+export interface CoachDay {
+  date: string | null;
+  network: { text: string; facts: Record<string, unknown>; createdAt: string | null } | null;
+  briefs: CoachBrief[];
+  counts: Partial<Record<CoachFocus, number>>;
+}
+
+export interface CoachEmailResult {
+  sent: number;
+  skipped: { branchId: number; reason: string }[];
+  failed: { branchId: number; reason: string | null }[];
+}

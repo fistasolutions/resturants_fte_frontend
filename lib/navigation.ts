@@ -8,6 +8,7 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   ChefHat,
+  ClipboardCheck,
   ClipboardList,
   Database,
   FileText,
@@ -108,6 +109,8 @@ export const navItems: NavItem[] = [
   // engine's figures on the owner's schedule. Entered through Digital Employees since
   // SPEC-290; its URL, doc and page context are unchanged.
   { title: "Report Builder", href: "/report-fte", icon: NotebookPen, enabled: true, within: "/employees" },
+  // SPEC-385 (backend SPEC-402): a restaurant brand's own employee.
+  { title: "Ops Coach", href: "/ops-coach", icon: ClipboardCheck, enabled: true, within: "/employees" },
   { title: "Product Analyst", href: "/products", icon: Package, enabled: true },
   { title: "Inventory Analyst", href: "/inventory", icon: Boxes, enabled: true },
   // Raw order browsing + the report drill-down target (SPEC-039; owner
