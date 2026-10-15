@@ -17,6 +17,11 @@ import type {
   Deal,
   Driver,
   NativeOrder,
+  GiftCardDetail,
+  GiftCardSale,
+  LoyaltyProgram,
+  LoyaltyReward,
+  MemberDetail,
   OrderDetail,
   OrderInput,
   OrderQuote,
@@ -178,7 +183,7 @@ export function placeOrder(input: OrderInput): Promise<NativeOrder> {
 }
 
 function tenderBody(tender: Tender | null | undefined): Record<string, unknown> | null {
-  return tender ? { method: tender.method, amount_tendered: tender.amountTendered ?? null } : null;
+  return tender ? { method: tender.method, amount_tendered: tender.amountTendered ?? null, code: tender.code ?? null } : null;
 }
 
 /** Move an order on; finishing an unpaid one takes its tender (SPEC-380). */
@@ -242,4 +247,82 @@ export function closeDrawer(drawerId: number, countedCash: number, notes: string
 
 export function reopenDrawer(drawerId: number): Promise<CashDrawer> {
   return send("POST", `/restaurant/cash/drawers/${drawerId}/reopen`, undefined, "Reopening the day failed");
+}
+
+// ── loyalty and gift cards (SPEC-383 / backend SPEC-398) ─────────────────────
+
+export function saveLoyaltyProgram(input: Partial<LoyaltyProgram>): Promise<LoyaltyProgram> {
+  return send("PUT", "/restaurant/loyalty", toApi({ ...input }), "Saving the program failed");
+}
+
+export type RewardInput = Partial<Pick<LoyaltyReward, "name" | "points" | "kind" | "value" | "itemId" | "isActive" | "sort">>;
+
+export function createReward(input: RewardInput): Promise<LoyaltyReward> {
+  return send("POST", "/restaurant/loyalty/rewards", toApi({ ...input }), "Adding the reward failed");
+}
+
+export function updateReward(id: number, input: RewardInput): Promise<LoyaltyReward> {
+  return send("PATCH", `/restaurant/loyalty/rewards/${id}`, toApi({ ...input }), "Saving the reward failed");
+}
+
+export function adjustPoints(guestId: number, points: number, note: string): Promise<MemberDetail> {
+  return send("POST", `/restaurant/loyalty/members/${guestId}/adjust`, { points, note }, "Adjusting the points failed");
+}
+
+export function enrollGuest(input: { phone: string; name?: string | null; email?: string | null; branchId?: number | null }): Promise<MemberDetail & { joined: boolean }> {
+  return send(
+    "POST",
+    "/restaurant/pos/loyalty/enroll",
+    { phone: input.phone, name: input.name || null, email: input.email || null, branch_id: input.branchId ?? null },
+    "Joining the program failed",
+  );
+}
+
+export interface GiftCardSaleInput {
+  branchId: number;
+  amount: number;
+  tender: { method: "cash" | "card_present"; amountTendered?: number | null };
+  recipientName?: string | null;
+  recipientEmail?: string | null;
+}
+
+export function sellGiftCard(input: GiftCardSaleInput): Promise<GiftCardSale> {
+  return send(
+    "POST",
+    "/restaurant/pos/gift-cards",
+    {
+      branch_id: input.branchId,
+      amount: input.amount,
+      tender: { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null },
+      recipient_name: input.recipientName || null,
+      recipient_email: input.recipientEmail || null,
+    },
+    "Selling the gift card failed",
+  );
+}
+
+export function reloadGiftCard(input: Omit<GiftCardSaleInput, "recipientName" | "recipientEmail"> & { code: string }): Promise<GiftCardSale> {
+  return send(
+    "POST",
+    "/restaurant/pos/gift-cards/reload",
+    {
+      branch_id: input.branchId,
+      code: input.code,
+      amount: input.amount,
+      tender: { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null },
+    },
+    "Reloading the gift card failed",
+  );
+}
+
+export function lookUpGiftCard(code: string): Promise<{ id: number; last4: string; balance: number; status: string }> {
+  return send("POST", "/restaurant/pos/gift-cards/lookup", { code }, "Looking up the gift card failed");
+}
+
+export function setGiftCardStatus(id: number, active: boolean): Promise<GiftCardDetail> {
+  return send("POST", `/restaurant/gift-cards/${id}/${active ? "enable" : "disable"}`, undefined, "Changing the card failed");
+}
+
+export function adjustGiftCard(id: number, amount: number, note: string): Promise<GiftCardDetail> {
+  return send("POST", `/restaurant/gift-cards/${id}/adjust`, { amount, note }, "Adjusting the card failed");
 }

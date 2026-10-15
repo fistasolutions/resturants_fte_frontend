@@ -12,7 +12,13 @@ import type {
   Catalog,
   DayOrders,
   Driver,
+  GiftCardDetail,
+  GiftCardList,
+  GiftCardSettlement,
   KitchenBoard,
+  LoyaltyMember,
+  LoyaltyOverview,
+  MemberDetail,
   OrderDetail,
   PaymentAccount,
 } from "@/types/restaurant-os";
@@ -117,6 +123,19 @@ export const restaurantPaths = {
     return `/restaurant/pos/branches/${branchId}/orders${query ? `?${query}` : ""}`;
   },
   orderDetail: (id: number): string => `/restaurant/pos/orders/${id}`,
+  loyalty: (): string => "/restaurant/loyalty",
+  loyaltyMembers: (q: string | null): string => `/restaurant/loyalty/members${q ? `?q=${encodeURIComponent(q)}` : ""}`,
+  loyaltyMember: (id: number): string => `/restaurant/loyalty/members/${id}`,
+  giftCards: (last4: string | null, status: string | null): string => {
+    const params = new URLSearchParams();
+    if (last4) params.set("last4", last4);
+    if (status) params.set("status", status);
+    const query = params.toString();
+    return `/restaurant/gift-cards${query ? `?${query}` : ""}`;
+  },
+  giftCard: (id: number): string => `/restaurant/gift-cards/${id}`,
+  settlement: (from: string, to: string): string =>
+    `/restaurant/gift-cards/settlement?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
   cashDay: (branchId: number, date: string | null): string =>
     `/restaurant/cash/branches/${branchId}${date ? `?date=${encodeURIComponent(date)}` : ""}`,
   royalties: (filters: RestaurantFilters): string =>
@@ -248,6 +267,30 @@ export const restaurantQueries = {
   cashDay: (branchId: number, date: string | null) =>
     defineQuery<CashDay>([...RESTAURANT_KEY, "cash", branchId, date], async (api) =>
       fromApi<CashDay>(await api(restaurantPaths.cashDay(branchId, date))),
+    ),
+  loyalty: () =>
+    defineQuery<LoyaltyOverview>([...RESTAURANT_KEY, "loyalty"], async (api) =>
+      fromApi<LoyaltyOverview>(await api(restaurantPaths.loyalty())),
+    ),
+  loyaltyMembers: (q: string | null) =>
+    defineQuery<LoyaltyMember[]>([...RESTAURANT_KEY, "loyalty-members", q], async (api) =>
+      fromApi<{ members: LoyaltyMember[] }>(await api(restaurantPaths.loyaltyMembers(q))).members,
+    ),
+  loyaltyMember: (id: number) =>
+    defineQuery<MemberDetail>([...RESTAURANT_KEY, "loyalty-member", id], async (api) =>
+      fromApi<MemberDetail>(await api(restaurantPaths.loyaltyMember(id))),
+    ),
+  giftCards: (last4: string | null, status: string | null) =>
+    defineQuery<GiftCardList>([...RESTAURANT_KEY, "gift-cards", last4, status], async (api) =>
+      fromApi<GiftCardList>(await api(restaurantPaths.giftCards(last4, status))),
+    ),
+  giftCard: (id: number) =>
+    defineQuery<GiftCardDetail>([...RESTAURANT_KEY, "gift-card", id], async (api) =>
+      fromApi<GiftCardDetail>(await api(restaurantPaths.giftCard(id))),
+    ),
+  settlement: (from: string, to: string) =>
+    defineQuery<GiftCardSettlement>([...RESTAURANT_KEY, "settlement", from, to], async (api) =>
+      fromApi<GiftCardSettlement>(await api(restaurantPaths.settlement(from, to))),
     ),
   royalties: (filters: RestaurantFilters) =>
     defineQuery<Royalties>(

@@ -18,8 +18,9 @@ import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { storefrontQueries } from "@/lib/queries/storefront";
 import { quoteKeyLines } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
-import { placePublicOrder, quotePublicOrder } from "@/services/storefront-actions";
-import type { CartLineInput, MenuEntry, OrderChannel, OrderInput, PaymentMethod, PlacedOrder, PublicBranch } from "@/types/restaurant-os";
+import { checkPublicGiftCard, placePublicOrder, quotePublicOrder } from "@/services/storefront-actions";
+import { earnPreview, formatCodeInput, isCompleteCode } from "@/lib/loyalty";
+import type { CartLineInput, MenuEntry, OrderChannel, OrderInput, PaymentMethod, PlacedOrder, PublicBranch, PublicMenu } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
 type Mode = "delivery" | "carryout";
@@ -63,6 +64,7 @@ function Checkout({
   postal,
   lines,
   cardOnline,
+  loyalty,
   onPlaced,
 }: {
   slug: string;
@@ -71,6 +73,7 @@ function Checkout({
   postal: string;
   lines: CartLineInput[];
   cardOnline: boolean;
+  loyalty: PublicMenu["loyalty"];
   onPlaced: (order: PlacedOrder) => void;
 }) {
   const [name, setName] = useState("");
@@ -85,6 +88,9 @@ function Checkout({
   const [coupon, setCoupon] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [giftCode, setGiftCode] = useState("");
+  const [giftNote, setGiftNote] = useState<string | null>(null);
+  const [join, setJoin] = useState(false);
 
   const input: OrderInput = {
     branchId: branch.id,
@@ -98,6 +104,17 @@ function Checkout({
     marketingOptIn: optIn,
     address: mode === "delivery" ? { line1: line1.trim() || "-", city: city.trim() || null, postalCode: postal, instructions: instructions.trim() || null } : null,
     paymentMethod: payment,
+    giftCardCode: isCompleteCode(giftCode) ? giftCode : null,
+    loyaltyJoin: Boolean(loyalty?.enabled) && join,
+  };
+  const checkGift = async () => {
+    setGiftNote(null);
+    try {
+      const card = await checkPublicGiftCard(slug, giftCode);
+      setGiftNote(`This card holds ${formatCurrency(card.balance)}. It pays what it can; the rest is paid as chosen above.`);
+    } catch (err) {
+      setGiftNote(err instanceof Error ? err.message : "No gift card with that code.");
+    }
   };
   const quote = useQuery({
     queryKey: ["storefront", "quote", slug, branch.id, mode, quoteKeyLines(lines), input.coupon, input.tip],
@@ -183,6 +200,32 @@ function Checkout({
           <Input id="co-coupon" value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} maxLength={40} />
         </div>
       </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="co-gift">Gift card (optional)</Label>
+        <div className="flex gap-2">
+          <Input
+            id="co-gift"
+            value={giftCode}
+            onChange={(e) => {
+              setGiftCode(formatCodeInput(e.target.value));
+              setGiftNote(null);
+            }}
+            placeholder="XXXX-XXXX-XXXX-XXXX"
+            autoComplete="off"
+          />
+          <Button type="button" variant="outline" disabled={!isCompleteCode(giftCode)} onClick={() => void checkGift()}>
+            Check balance
+          </Button>
+        </div>
+        {giftNote ? <p className="text-xs text-muted-foreground">{giftNote}</p> : null}
+      </div>
+      {loyalty?.enabled ? (
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox checked={join} onCheckedChange={(v) => setJoin(v === true)} /> Join {loyalty.name} and earn
+          {quote.data ? ` ${earnPreview(quote.data.cart.subtotal - quote.data.cart.discount, loyalty.pointsPerUnit)}` : ""} points on this order
+          {loyalty.welcomePoints > 0 ? ` (+${loyalty.welcomePoints} to welcome you)` : ""}
+        </label>
+      ) : null}
       <label className="flex items-center gap-2 text-sm">
         <Checkbox checked={optIn} onCheckedChange={(v) => setOptIn(v === true)} /> Send me offers by email and text
       </label>
@@ -339,7 +382,7 @@ export function StorefrontView({ slug }: { slug: string }) {
         <aside className="h-fit space-y-4 rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-4">
           <h2 className="font-semibold">Your order</h2>
           {checkout ? (
-            <Checkout slug={slug} branch={branch} mode={mode} postal={searched ?? ""} lines={lines} cardOnline={Boolean(menu.data?.ordering.cardOnline)} onPlaced={setPlaced} />
+            <Checkout slug={slug} branch={branch} mode={mode} postal={searched ?? ""} lines={lines} cardOnline={Boolean(menu.data?.ordering.cardOnline)} loyalty={menu.data?.loyalty} onPlaced={setPlaced} />
           ) : (
             <>
               <CartPanel

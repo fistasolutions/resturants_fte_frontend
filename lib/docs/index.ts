@@ -22,6 +22,7 @@ import { guestsDoc } from "@/lib/docs/content/guests";
 import { integrationsDoc } from "@/lib/docs/content/integrations";
 import { cashDoc } from "@/lib/docs/content/cash";
 import { kitchenDoc } from "@/lib/docs/content/kitchen";
+import { loyaltyDoc } from "@/lib/docs/content/loyalty";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
 import { networkDoc } from "@/lib/docs/content/network";
@@ -75,6 +76,7 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   posDoc,
   kitchenDoc,
   cashDoc,
+  loyaltyDoc,
   operationsDoc,
   warehouseDoc,
   returnsDoc,

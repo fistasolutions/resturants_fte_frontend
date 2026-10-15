@@ -15,6 +15,7 @@ import {
   ROYALTY_TAB_LABELS,
   ROYALTY_TABS,
 } from "@/lib/restaurant";
+import { LOYALTY_HQ_TABS, LOYALTY_TAB_LABELS, LOYALTY_TABS } from "@/lib/loyalty";
 import { POS_TAB_LABELS, POS_TABS } from "@/lib/restaurant-os";
 
 export interface PageTab {
@@ -46,6 +47,14 @@ export const POS_PAGE = {
   title: "Order Taking",
   description: "Take counter and phone orders: caller ID, the menu with the pizza builder, coupons, cash or card — and the day's orders to settle and refund.",
   tabs: POS_TABS.map((key): PageTab => ({ key, label: POS_TAB_LABELS[key] })),
+  periodTabs: [] as string[],
+} as const;
+
+export const LOYALTY_PAGE = {
+  base: "/loyalty",
+  title: "Loyalty & Gift Cards",
+  description: "The brand's points program and its rewards, every member's points, the gift cards sold, and what each franchise holds for the others.",
+  tabs: LOYALTY_TABS.map((key): PageTab => ({ key, label: LOYALTY_TAB_LABELS[key], hqOnly: LOYALTY_HQ_TABS.has(key) })),
   periodTabs: [] as string[],
 } as const;
 

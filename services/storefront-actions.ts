@@ -40,3 +40,14 @@ export function quotePublicOrder(slug: string, input: OrderInput): Promise<Order
 export function placePublicOrder(slug: string, input: OrderInput): Promise<PlacedOrder> {
   return post(`/storefront/${encodeURIComponent(slug)}/orders`, input, "Placing the order failed.");
 }
+
+/** SPEC-383: what a gift card holds, by its code. A wrong code reads "No gift card with that code". */
+export async function checkPublicGiftCard(slug: string, code: string): Promise<{ balance: number; currency: string; last4: string }> {
+  const response = await fetch(proxyUrl(`/storefront/${encodeURIComponent(slug)}/gift-cards/balance`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  if (!response.ok) throw new StorefrontError("No gift card with that code.", response.status);
+  return fromApi(await response.json());
+}

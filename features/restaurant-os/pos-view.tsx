@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Phone, RotateCcw, Search } from "lucide-react";
+import { CheckCircle2, Gift, Phone, RotateCcw, Search } from "lucide-react";
 
 import { QueryErrorState } from "@/components/shared/query-error-state";
 import { RoleButton } from "@/components/shared/role-gate";
@@ -13,12 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmptyPanel, FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { BranchPicker, useBranchChoice } from "@/features/restaurant-os/branch-picker";
 import { CartPanel } from "@/features/restaurant-os/cart-panel";
+import { GiftCardDialog } from "@/features/restaurant-os/gift-card-dialog";
 import { ItemBuilder } from "@/features/restaurant-os/item-builder";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
 import { CHANNEL_NAMES, POS_PAYMENT_CHOICES, changeDue, paymentLabel, quoteKeyLines, reorderLines } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
-import { placeOrder, quoteOrder } from "@/services/restaurant-os-actions";
+import { enrollGuest, lookUpGiftCard, placeOrder, quoteOrder } from "@/services/restaurant-os-actions";
+import { formatCodeInput, isCompleteCode } from "@/lib/loyalty";
 import type { CartLineInput, MenuEntry, NativeOrder, OrderChannel, OrderInput } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
@@ -45,6 +47,11 @@ export function PosView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<NativeOrder | null>(null);
+  const [rewardId, setRewardId] = useState<number | null>(null);
+  const [giftCode, setGiftCode] = useState("");
+  const [giftBalance, setGiftBalance] = useState<string | null>(null);
+  const [selling, setSelling] = useState(false);
+  const [joining, setJoining] = useState(false);
   const caller = useApiQuery(lookup ? restaurantQueries.caller(lookup) : null);
 
   const choice = POS_PAYMENT_CHOICES.find((c) => c.key === payment) ?? POS_PAYMENT_CHOICES[0];
@@ -61,10 +68,12 @@ export function PosView() {
         notes: notes.trim() || null,
         paymentMethod: choice.method,
         source: phone.trim() ? "phone" : "walk_in",
-        tender: choice.tender ? { method: choice.tender, amountTendered: choice.tender === "cash" && given.trim() ? Number(given) : null } : null,
+        tender: choice.tender ? { method: choice.tender, amountTendered: choice.tender === "cash" && given.trim() && !giftCode ? Number(given) : null } : null,
+        rewardId,
+        giftCardCode: isCompleteCode(giftCode) ? giftCode : null,
       }
     : null;
-  const quoteKey = input ? { b: input.branchId, c: channel, l: quoteKeyLines(lines), coupon: input.coupon, tip: input.tip } : null;
+  const quoteKey = input ? { b: input.branchId, c: channel, l: quoteKeyLines(lines), coupon: input.coupon, tip: input.tip, r: rewardId, p: rewardId ? phone : null } : null;
   const quote = useQuery({
     queryKey: [...RESTAURANT_KEY, "pos-quote", quoteKey],
     queryFn: () => quoteOrder(input as OrderInput),
@@ -93,6 +102,9 @@ export function PosView() {
       setTip("");
       setNotes("");
       setGiven("");
+      setRewardId(null);
+      setGiftCode("");
+      setGiftBalance(null);
       await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "board", branch.id] });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Placing the order failed.");
@@ -101,8 +113,32 @@ export function PosView() {
     }
   };
 
+  const join = async () => {
+    setJoining(true);
+    setError(null);
+    try {
+      await enrollGuest({ phone: phone.trim(), name: name.trim() || null, branchId: branch.id });
+      await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "caller"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Joining failed.");
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const checkGift = async () => {
+    setGiftBalance(null);
+    try {
+      const card = await lookUpGiftCard(giftCode);
+      setGiftBalance(card.status === "active" ? `Holds ${formatCurrency(card.balance)}` : "This card is disabled");
+    } catch (err) {
+      setGiftBalance(err instanceof Error ? err.message : "No gift card with that code.");
+    }
+  };
+
   const startNew = () => {
     setPlaced(null);
+    setRewardId(null);
     setPhone("");
     setLookup(null);
     setName("");
@@ -114,6 +150,9 @@ export function PosView() {
       <section className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <BranchPicker branches={branches} branch={branch} />
+          <RoleButton need={["orders.take"]} variant="outline" size="sm" onClick={() => setSelling(true)}>
+            <Gift aria-hidden /> Gift card
+          </RoleButton>
           <div className="flex rounded-lg border border-border bg-card p-0.5" role="group" aria-label="Order type">
             {CHANNELS.map((c) => (
               <button
@@ -187,6 +226,7 @@ export function PosView() {
             </p>
             <p className="text-xs text-muted-foreground">
               {placed.paymentStatus === "paid" ? "Paid" : "To be paid"} · {paymentLabel(placed.paymentMethod)}
+              {placed.rewardPoints ? ` · ${placed.rewardPoints} points redeemed` : ""}
             </p>
             <p className="text-xs text-muted-foreground">
               Ready about {placed.quotedReadyAt ? formatTime(placed.quotedReadyAt) : "—"}
@@ -260,6 +300,40 @@ export function PosView() {
               <p className="text-xs text-muted-foreground">New caller — they are saved with this order.</p>
             )
           ) : null}
+          {caller.data?.loyalty?.enabled ? (
+            <div className="space-y-1.5 rounded-lg border border-border p-2 text-sm">
+              {caller.data.loyalty.member ? (
+                <>
+                  <p className="font-medium text-foreground">
+                    {caller.data.loyalty.name} · <span className="tabular-nums">{caller.data.loyalty.points ?? 0}</span> points
+                  </p>
+                  {(caller.data.loyalty.rewards ?? []).map((r) => (
+                    <div key={r.id} className="flex items-center justify-between gap-2 text-xs">
+                      <span className={r.available ? "text-foreground" : "text-muted-foreground"}>
+                        {r.name} · {r.points} pts
+                      </span>
+                      {rewardId === r.id ? (
+                        <Button size="sm" variant="ghost" className="h-7" onClick={() => setRewardId(null)}>
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="h-7" disabled={!r.available || rewardId != null} onClick={() => setRewardId(r.id)}>
+                          Use
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Not in {caller.data.loyalty.name} yet.</span>
+                  <RoleButton need={["orders.take"]} size="sm" variant="outline" className="h-7" disabled={joining} onClick={() => void join()}>
+                    Join
+                  </RoleButton>
+                </div>
+              )}
+            </div>
+          ) : null}
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Guest name" aria-label="Guest name" maxLength={200} />
           {channel === "delivery" ? (
             <div className="grid gap-2">
@@ -300,7 +374,23 @@ export function PosView() {
                 ))}
               </SelectContent>
             </Select>
-            {choice.tender === "cash" ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={giftCode}
+                onChange={(e) => {
+                  setGiftCode(formatCodeInput(e.target.value));
+                  setGiftBalance(null);
+                }}
+                placeholder="Gift card code (optional)"
+                aria-label="Gift card code"
+                autoComplete="off"
+              />
+              <RoleButton need={["orders.take"]} size="sm" variant="outline" disabled={!isCompleteCode(giftCode)} onClick={() => void checkGift()}>
+                Balance
+              </RoleButton>
+            </div>
+            {giftBalance ? <p className="text-xs text-muted-foreground">{giftBalance} — it pays what it holds; the payment below covers the rest.</p> : null}
+            {choice.tender === "cash" && !giftCode ? (
               <div className="flex items-center gap-2">
                 <Input value={given} onChange={(e) => setGiven(e.target.value)} placeholder="Cash given (optional)" aria-label="Cash given" inputMode="decimal" />
                 <span className="shrink-0 text-sm tabular-nums text-muted-foreground" aria-live="polite">
@@ -339,6 +429,7 @@ export function PosView() {
           </div>
         ) : null}
       </aside>
+      {selling ? <GiftCardDialog branchId={branch.id} onClose={() => setSelling(false)} /> : null}
       {building ? <ItemBuilder item={building} onClose={() => setBuilding(null)} onAdd={(line) => setLines((cur) => [...cur, line])} /> : null}
     </div>
   );

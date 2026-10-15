@@ -248,7 +248,8 @@ describe("payments and the drawer (SPEC-380)", () => {
     expect(paymentLabel("card_online")).toBe("Card online");
     expect(paymentLabel("card_present")).toBe("Card");
     expect(paymentLabel(null)).toBe("—");
-    expect(paymentLabel("gift_card")).toBe("gift card");
+    expect(paymentLabel("gift_card")).toBe("Gift card");
+    expect(paymentLabel("house_account")).toBe("house account");
     expect(STAGE_LABELS.awaiting_payment).toBe("Awaiting payment");
   });
 
@@ -260,7 +261,7 @@ describe("payments and the drawer (SPEC-380)", () => {
       openingFloat: 100,
       openedAt: null,
       closedAt: null,
-      byKind: { cash_sale: 46.73, paid_in: 5, paid_out: 10, cash_refund: 6.73, drop: 50 },
+      byKind: { cash_sale: 46.73, gift_card_sale: 0, paid_in: 5, paid_out: 10, cash_refund: 6.73, drop: 50 },
       expectedCash: 85,
       countedCash: null,
       variance: null,
@@ -269,6 +270,7 @@ describe("payments and the drawer (SPEC-380)", () => {
     expect(lines.map((l) => [l.label, l.amount, l.sign])).toEqual([
       ["Opening float", 100, 1],
       ["Cash sales", 46.73, 1],
+      ["Gift card sales", 0, 1],
       ["Paid in", 5, 1],
       ["Paid out", 10, -1],
       ["Cash refunds", 6.73, -1],
@@ -279,8 +281,12 @@ describe("payments and the drawer (SPEC-380)", () => {
 
   it("sends a tender with the order only when there is one", () => {
     const base = { branchId: 3, channel: "carryout" as const, lines: [] };
-    expect(orderBody({ ...base, tender: { method: "cash", amountTendered: 50 } }).tender).toEqual({ method: "cash", amount_tendered: 50 });
-    expect(orderBody({ ...base, tender: { method: "card_present" } }).tender).toEqual({ method: "card_present", amount_tendered: null });
+    expect(orderBody({ ...base, tender: { method: "cash", amountTendered: 50 } }).tender).toEqual({ method: "cash", amount_tendered: 50, code: null });
+    expect(orderBody({ ...base, tender: { method: "card_present" } }).tender).toEqual({ method: "card_present", amount_tendered: null, code: null });
+    const gift = orderBody({ ...base, tender: { method: "gift_card", code: "ABCD-EFGH-JKLM-NPQR" }, giftCardCode: "ABCD-EFGH-JKLM-NPQR", rewardId: 4, loyaltyJoin: true });
+    expect(gift.tender).toEqual({ method: "gift_card", amount_tendered: null, code: "ABCD-EFGH-JKLM-NPQR" });
+    expect([gift.gift_card_code, gift.reward_id, gift.loyalty_join]).toEqual(["ABCD-EFGH-JKLM-NPQR", 4, true]);
+    expect([orderBody(base).gift_card_code, orderBody(base).reward_id, orderBody(base).loyalty_join]).toEqual([null, null, false]);
     expect(orderBody(base).tender).toBeNull();
   });
 });

@@ -51,6 +51,7 @@ export const cashDoc = defineDoc({
   goodToKnow: [
     "It needs the Run the cash drawer permission; franchise owners, general managers and shift managers have it.",
     "A card taken at the counter is not cash: it shows under By tender, never in the drawer.",
+    "Gift cards sold for cash go into the drawer as gift card sales; the day report shows gift cards sold separately, because they are not sales until spent.",
   ],
   related: ["pos", "kitchen", "network"],
 });

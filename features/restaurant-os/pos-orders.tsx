@@ -24,6 +24,7 @@ import {
   paymentLabel,
   refundable,
 } from "@/lib/restaurant-os";
+import { formatCodeInput, isCompleteCode } from "@/lib/loyalty";
 import { cn } from "@/lib/utils";
 import { payOrder, refundOrder } from "@/services/restaurant-os-actions";
 import type { DayOrderRow, OrderDetail } from "@/types/restaurant-os";
@@ -42,15 +43,22 @@ function useRefresh(branchId: number, orderId: number) {
 
 function TakePayment({ order, onDone }: { order: OrderDetail; onDone: () => Promise<void> }) {
   const [given, setGiven] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const change = given.trim() ? changeDue(order.total, given) : null;
-  const take = async (method: "cash" | "card_present") => {
+  const due = order.amountDue;
+  const change = given.trim() ? changeDue(due, given) : null;
+  const take = async (method: "cash" | "card_present" | "gift_card") => {
     setBusy(true);
     setError(null);
     try {
-      await payOrder(order.id, { method, amountTendered: method === "cash" && given.trim() ? Number(given) : null });
+      await payOrder(order.id, {
+        method,
+        amountTendered: method === "cash" && given.trim() ? Number(given) : null,
+        code: method === "gift_card" ? code : null,
+      });
       setGiven("");
+      setCode("");
       await onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Taking the payment failed.");
@@ -60,7 +68,9 @@ function TakePayment({ order, onDone }: { order: OrderDetail; onDone: () => Prom
   };
   return (
     <div className="space-y-2 rounded-xl border border-border p-3">
-      <p className="text-sm font-semibold text-foreground">Take payment · {formatCurrency(order.total)}</p>
+      <p className="text-sm font-semibold text-foreground">
+        Take payment · {formatCurrency(due)} due{due < order.total ? ` of ${formatCurrency(order.total)}` : ""}
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         <Input value={given} onChange={(e) => setGiven(e.target.value)} placeholder="Cash given" aria-label="Cash given" inputMode="decimal" className="max-w-[160px]" />
         <span className="text-sm tabular-nums text-muted-foreground" aria-live="polite">
@@ -75,6 +85,13 @@ function TakePayment({ order, onDone }: { order: OrderDetail; onDone: () => Prom
           Paid card
         </RoleButton>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Input value={code} onChange={(e) => setCode(formatCodeInput(e.target.value))} placeholder="Gift card code" aria-label="Gift card code" autoComplete="off" className="max-w-[220px]" />
+        <RoleButton need={["orders.take"]} size="sm" variant="outline" disabled={busy || !isCompleteCode(code)} onClick={() => void take("gift_card")}>
+          Pay with gift card
+        </RoleButton>
+      </div>
+      <p className="text-xs text-muted-foreground">A gift card pays what it holds; take the rest in cash or by card.</p>
       <FormError message={error} />
     </div>
   );
@@ -167,6 +184,22 @@ function Detail({ branchId, orderId, onClose }: { branchId: number; orderId: num
           ) : null}
           <dt className="text-muted-foreground">Payment</dt>
           <dd className="text-right">{PAYMENT_STATUS_LABELS[o.paymentStatus ?? ""] ?? "—"}</dd>
+          {o.paymentStatus === "unpaid" && o.amountDue < o.total ? (
+            <>
+              <dt className="text-muted-foreground">Still due</dt>
+              <dd className="text-right font-semibold">{formatCurrency(o.amountDue)}</dd>
+            </>
+          ) : null}
+          {o.rewardPoints || o.pointsEarned ? (
+            <>
+              <dt className="text-muted-foreground">Points</dt>
+              <dd className="text-right">
+                {o.rewardPoints ? `−${o.rewardPoints} redeemed` : ""}
+                {o.rewardPoints && o.pointsEarned ? " · " : ""}
+                {o.pointsEarned ? `+${o.pointsEarned} earned` : ""}
+              </dd>
+            </>
+          ) : null}
         </dl>
         {o.payments.length ? (
           <ul className="space-y-1 text-xs text-muted-foreground">
@@ -218,7 +251,9 @@ function Row({ row, selected, onSelect }: { row: DayOrderRow; selected: boolean;
         </span>
         <span className="flex items-center gap-2">
           {row.refundTotal > 0 ? <Badge variant="outline">−{formatCurrency(row.refundTotal)}</Badge> : null}
-          <Badge variant="outline">{PAYMENT_STATUS_LABELS[row.paymentStatus ?? ""] ?? "—"}</Badge>
+          <Badge variant="outline">
+            {row.paymentStatus === "unpaid" && row.amountDue < row.total ? `Due ${formatCurrency(row.amountDue)}` : (PAYMENT_STATUS_LABELS[row.paymentStatus ?? ""] ?? "—")}
+          </Badge>
           <span className="text-sm font-semibold tabular-nums">{formatCurrency(row.total)}</span>
         </span>
       </button>

@@ -18,6 +18,7 @@ import { FORESIGHT_TABS } from "@/lib/foresight-tabs";
 import { GORGIAS_TABS } from "@/lib/gorgias-tabs";
 import { INVENTORY_TABS } from "@/lib/inventory-tabs";
 import { LOCKED_PAGES, isPageShown, pageId, tabId } from "@/lib/nav-prefs";
+import { LOYALTY_TAB_LABELS, LOYALTY_TABS } from "@/lib/loyalty";
 import { POS_TAB_LABELS, POS_TABS } from "@/lib/restaurant-os";
 import { ORDERS_TABS } from "@/lib/order-tabs";
 import { PRODUCT_TABS } from "@/lib/product-tabs";
@@ -71,6 +72,7 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/menu": MENU_TABS.map((key) => ({ key, label: MENU_TAB_LABELS[key] })),
   "/kitchen": KITCHEN_TABS.map((key) => ({ key, label: KITCHEN_TAB_LABELS[key] })),
   "/pos": POS_TABS.map((key) => ({ key, label: POS_TAB_LABELS[key] })),
+  "/loyalty": LOYALTY_TABS.map((key) => ({ key, label: LOYALTY_TAB_LABELS[key] })),
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };

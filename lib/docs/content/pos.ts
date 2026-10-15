@@ -27,6 +27,8 @@ export const posDoc = defineDoc({
     "Choose how it is paid: cash now (type the cash given and the change shows before you place it), card now, or later — cash or card at the door, or at the store.",
     "Place the order; it lands on Kitchen & Dispatch as accepted, with its quoted ready time.",
     "Cash taken goes into the branch's drawer for the day, which Cash & Day Close reconciles.",
+    "A gift card code pays what the card holds; the payment you choose covers the rest. The Gift card button sells or reloads a card.",
+    "When the loyalty program is on, the caller panel shows the member's points and rewards (Use) or a Join button for a guest who is not a member yet.",
   ],
   sections: [
     { title: "New order", route: "/pos", summary: "The menu grid by category, the item builder, the caller panel and the priced cart with checkout and payment.", details: ["The quoted time grows with how busy the kitchen is.", "Items the branch has 86'd cannot be added.", "Cash now refuses less cash than the total."] },
@@ -35,7 +37,7 @@ export const posDoc = defineDoc({
       route: "/pos?tab=orders",
       summary: "The branch's orders for a business day — search by order number, phone or name — with each order's lines, payments and refunds.",
       details: [
-        "Take payment settles an unpaid order with cash (with its change) or a card.",
+        "Take payment settles an unpaid order with cash (with its change), a card or a gift card; a gift card pays what it holds and the order shows what is still due.",
         "Refund gives money back on a finished or cancelled order, up to what was paid: a card paid online goes back through the franchise's Stripe account, cash comes out of today's drawer, a card taken at the counter is refunded on the terminal and recorded here. It needs the Refund orders permission.",
         "A refund comes off net sales and the royalty basis.",
       ],
@@ -57,5 +59,5 @@ export const posDoc = defineDoc({
     "Guests pay by card online on the brand's ordering site when the branch's franchise has connected its Stripe account (Network › the franchisee's page).",
     "The POS takes orders even when online ordering is paused for being busy.",
   ],
-  related: ["kitchen", "cash", "menu", "network"],
+  related: ["kitchen", "cash", "loyalty", "menu", "network"],
 });

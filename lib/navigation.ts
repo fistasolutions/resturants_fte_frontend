@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Database,
   FileText,
+  Gift,
   HandCoins,
   Footprints,
   Gauge,
@@ -97,6 +98,8 @@ export const navItems: NavItem[] = [
   { title: "Kitchen & Dispatch", href: "/kitchen", icon: ChefHat, enabled: true },
   // SPEC-380 (backend SPEC-395): the branch's drawer and its day close.
   { title: "Cash & Day Close", href: "/cash", icon: Wallet, enabled: true },
+  // SPEC-383 (backend SPEC-398): the points program and gift cards.
+  { title: "Loyalty & Gift Cards", href: "/loyalty", icon: Gift, enabled: true },
   { title: "Operations", href: "/operations", icon: Timer, enabled: true },
   { title: "Guests", href: "/guests", icon: UserRound, enabled: true },
   { title: "Royalties", href: "/royalties", icon: HandCoins, enabled: true },

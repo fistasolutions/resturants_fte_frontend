@@ -27,7 +27,7 @@ export const kitchenDoc = defineDoc({
   ],
   sections: [
     { title: "Kitchen", route: "/kitchen", summary: "Four columns — New, Making, Oven, Ready — with each ticket's lines, toppings, notes, age and one bump button.", details: ["Cancel asks for a reason, which is kept with the order."] },
-    { title: "Dispatch", route: "/kitchen?tab=dispatch", summary: "Ready delivery orders with a driver picker and Send out; orders on the road with Delivered.", details: ["A driver back from the last delivery becomes available again by itself.", "An order the driver collects money for is marked Collect; Delivered asks whether it was paid cash or card."] },
+    { title: "Dispatch", route: "/kitchen?tab=dispatch", summary: "Ready delivery orders with a driver picker and Send out; orders on the road with Delivered.", details: ["A driver back from the last delivery becomes available again by itself.", "An order the driver collects money for is marked Collect; Delivered asks whether it was paid cash, card or with a gift card (its code)."] },
     { title: "Drivers", route: "/kitchen?tab=drivers", summary: "The branch's drivers: add, set off shift or available, deactivate.", details: [] },
   ],
   howToUse: [

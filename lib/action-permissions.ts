@@ -247,6 +247,16 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "restaurant-actions:updateFranchisee": ["network.manage"],
   // services/restaurant-os-actions.ts (SPEC-379; backend SPEC-392/393 route policy)
   "restaurant-os-actions:addDriver": ["kitchen.operate"],
+  "restaurant-os-actions:adjustGiftCard": ["gift_cards.manage"],
+  "restaurant-os-actions:adjustPoints": ["loyalty.adjust"],
+  "restaurant-os-actions:createReward": ["loyalty.manage"],
+  "restaurant-os-actions:enrollGuest": ["orders.take"],
+  "restaurant-os-actions:lookUpGiftCard": ["orders.take"],
+  "restaurant-os-actions:reloadGiftCard": ["orders.take"],
+  "restaurant-os-actions:saveLoyaltyProgram": ["loyalty.manage"],
+  "restaurant-os-actions:sellGiftCard": ["orders.take"],
+  "restaurant-os-actions:setGiftCardStatus": ["gift_cards.manage"],
+  "restaurant-os-actions:updateReward": ["loyalty.manage"],
   "restaurant-os-actions:advanceOrder": ["kitchen.operate"],
   "restaurant-os-actions:cancelOrder": ["kitchen.operate"],
   "restaurant-os-actions:closeDrawer": ["cash.manage"],
@@ -342,6 +352,7 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "spotlight-generation:startGeneration": ["spotlight.manage"],
   "spotlight-generation:startRefreshRewrite": ["spotlight.manage"],
   // services/storefront-actions.ts (SPEC-379; backend SPEC-394 — public, no sign-in)
+  "storefront-actions:checkPublicGiftCard": "member",
   "storefront-actions:placePublicOrder": "member",
   "storefront-actions:quotePublicOrder": "member",
   // services/team.ts

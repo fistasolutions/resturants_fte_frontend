@@ -235,7 +235,10 @@ export function orderBody(input: OrderInput): Record<string, unknown> {
     notes: input.notes || null,
     payment_method: input.paymentMethod ?? "cash",
     source: input.source ?? null,
-    tender: input.tender ? { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null } : null,
+    tender: input.tender ? { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null, code: input.tender.code ?? null } : null,
+    gift_card_code: input.giftCardCode || null,
+    reward_id: input.rewardId ?? null,
+    loyalty_join: input.loyaltyJoin ?? false,
   };
 }
 
@@ -345,6 +348,7 @@ export const PAYMENT_LABELS: Record<string, string> = {
   card_on_delivery: "Card at the door",
   pay_at_store: "Pay at the store",
   card_online: "Card online",
+  gift_card: "Gift card",
   marketplace: "Marketplace",
 };
 
@@ -383,6 +387,7 @@ export function refundable(detail: Pick<OrderDetail, "payments" | "status">): nu
 
 export const DRAWER_LABELS: Record<DrawerKind, string> = {
   cash_sale: "Cash sales",
+  gift_card_sale: "Gift card sales",
   paid_in: "Paid in",
   paid_out: "Paid out",
   cash_refund: "Cash refunds",
@@ -392,6 +397,7 @@ export const DRAWER_LABELS: Record<DrawerKind, string> = {
 /** One movement's name in the drawer's list. */
 export const MOVEMENT_LABELS: Record<DrawerKind, string> = {
   cash_sale: "Cash sale",
+  gift_card_sale: "Gift card sold",
   paid_in: "Paid in",
   paid_out: "Paid out",
   cash_refund: "Cash refund",
@@ -400,8 +406,8 @@ export const MOVEMENT_LABELS: Record<DrawerKind, string> = {
 
 /** The drawer's reconciliation, line by line, with the sign each line has. */
 export function drawerLines(drawer: CashDrawer): { label: string; amount: number; sign: 1 | -1 }[] {
-  const order: DrawerKind[] = ["cash_sale", "paid_in", "paid_out", "cash_refund", "drop"];
-  const sign: Record<DrawerKind, 1 | -1> = { cash_sale: 1, paid_in: 1, paid_out: -1, cash_refund: -1, drop: -1 };
+  const order: DrawerKind[] = ["cash_sale", "gift_card_sale", "paid_in", "paid_out", "cash_refund", "drop"];
+  const sign: Record<DrawerKind, 1 | -1> = { cash_sale: 1, gift_card_sale: 1, paid_in: 1, paid_out: -1, cash_refund: -1, drop: -1 };
   return [
     { label: "Opening float", amount: drawer.openingFloat, sign: 1 },
     ...order.map((k) => ({ label: DRAWER_LABELS[k], amount: drawer.byKind[k] ?? 0, sign: sign[k] })),

@@ -23,6 +23,7 @@ import {
   needsTender,
   nextStage,
 } from "@/lib/restaurant-os";
+import { formatCodeInput, isCompleteCode } from "@/lib/loyalty";
 import { cn } from "@/lib/utils";
 import { addDriver, advanceOrder, cancelOrder, dispatchOrder, updateDriver } from "@/services/restaurant-os-actions";
 import type { Driver, KitchenBoard, NativeOrder, OrderStage } from "@/types/restaurant-os";
@@ -44,6 +45,27 @@ function useActions(branchId: number) {
     }
   };
   return { error, run };
+}
+
+/** Finishing with a gift card at the door: the code, then the move (SPEC-383). */
+function GiftCardFinish({ order, to, onRun }: { order: NativeOrder; to: OrderStage; onRun: (work: () => Promise<unknown>) => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  if (!open) {
+    return (
+      <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>
+        Gift card
+      </Button>
+    );
+  }
+  return (
+    <span className="flex w-full gap-1.5">
+      <Input value={code} onChange={(e) => setCode(formatCodeInput(e.target.value))} placeholder="Card code" aria-label="Gift card code" className="h-8" autoComplete="off" />
+      <Button size="sm" disabled={!isCompleteCode(code)} onClick={() => void onRun(() => advanceOrder(order.id, to, { method: "gift_card", code }))}>
+        Paid
+      </Button>
+    </span>
+  );
 }
 
 /** Finishing an order: one button, or — when the money is still owed — how it was paid. */
@@ -75,6 +97,7 @@ function FinishButtons({
       <Button size="sm" variant="outline" onClick={() => void onRun(() => advanceOrder(order.id, to, { method: "card_present" }))}>
         Paid card
       </Button>
+      <GiftCardFinish order={order} to={to} onRun={onRun} />
     </>
   );
 }

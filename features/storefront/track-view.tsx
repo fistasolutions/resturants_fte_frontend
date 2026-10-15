@@ -103,6 +103,9 @@ export function TrackView({ token, paid = false }: { token: string; paid?: boole
           <span>Total</span>
           <span className="tabular-nums">{formatCurrency(order.total)}</span>
         </div>
+        {order.pointsEarned ? (
+          <p className="text-sm font-medium text-foreground">You earned {order.pointsEarned} points with this order.</p>
+        ) : null}
         <p className="text-xs text-muted-foreground">
           {paymentLabel(order.paymentMethod)} · {order.paymentStatus === "paid" ? "paid" : order.paymentStatus === "unpaid" ? "to pay" : (order.paymentStatus ?? "").replace(/_/g, " ")}
         </p>

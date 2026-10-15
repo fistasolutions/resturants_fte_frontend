@@ -8,12 +8,14 @@ export type GroupKind = "toppings" | "choice";
 export type Portion = "whole" | "left" | "right";
 export type Amount = "light" | "regular" | "extra";
 export type OrderChannel = "delivery" | "carryout" | "dine_in" | "catering";
-export type PaymentMethod = "cash" | "card" | "card_on_delivery" | "pay_at_store" | "card_online" | "marketplace";
+export type PaymentMethod = "cash" | "card" | "card_on_delivery" | "pay_at_store" | "card_online" | "marketplace" | "gift_card";
 /** What was actually taken at the counter or the door (SPEC-380 / backend SPEC-395). */
-export type TenderMethod = "cash" | "card_present";
+export type TenderMethod = "cash" | "card_present" | "gift_card";
 export interface Tender {
   method: TenderMethod;
   amountTendered?: number | null;
+  /** The gift card's code, for `gift_card` (SPEC-383). */
+  code?: string | null;
 }
 export type OrderStage =
   | "awaiting_payment"
@@ -198,6 +200,8 @@ export interface PricedCart {
   total: number;
   itemsCount: number;
   deal: { id: number; name: string; code: string | null } | null;
+  /** SPEC-383: the loyalty reward priced into the cart. */
+  reward?: { id: number; name: string; points: number; discount: number } | null;
   errors: { line: number | null; message: string }[];
 }
 
@@ -231,6 +235,10 @@ export interface OrderInput {
   source?: string | null;
   /** Settle at once at the counter. */
   tender?: Tender | null;
+  /** SPEC-383: a gift card paying what it holds, a reward (counter only), joining the program. */
+  giftCardCode?: string | null;
+  rewardId?: number | null;
+  loyaltyJoin?: boolean;
 }
 
 // ── orders ───────────────────────────────────────────────────────────────────
@@ -290,6 +298,8 @@ export interface NativeOrder {
   notes?: string | null;
   driverId?: number | null;
   cancelReason?: string | null;
+  rewardPoints?: number;
+  pointsEarned?: number;
 }
 
 export interface Driver {
@@ -309,9 +319,18 @@ export interface KitchenBoard {
   drivers: Driver[];
 }
 
+export interface CallerLoyalty {
+  enabled: boolean;
+  name?: string;
+  member?: boolean;
+  points?: number;
+  rewards?: { id: number; name: string; points: number; kind: RewardKind; available: boolean }[];
+}
+
 export interface CallerLookup {
   found: boolean;
   phone: string;
+  loyalty?: CallerLoyalty;
   guest?: { id: number; name: string | null; email: string | null; marketingOptIn: boolean };
   addresses?: (DeliveryAddress & { id: number })[];
   recentOrders?: {
@@ -374,6 +393,8 @@ export interface PublicMenu {
     /** The branch's franchise takes cards online (SPEC-380). */
     cardOnline?: boolean;
   };
+  /** SPEC-383: the brand's points program, when it is on. */
+  loyalty?: { enabled: boolean; name: string; pointsPerUnit: number; welcomePoints: number };
 }
 
 export interface PlacedOrder {
@@ -384,6 +405,7 @@ export interface PlacedOrder {
   total: number;
   /** Stripe's hosted page, for an order paid by card online. */
   checkoutUrl?: string | null;
+  paymentStatus?: string | null;
 }
 
 export interface TrackedOrder extends NativeOrder {
@@ -408,7 +430,7 @@ export interface PaymentAccount {
 
 export interface OrderPayment {
   id: number;
-  method: "cash" | "card_present" | "card_online" | "marketplace";
+  method: "cash" | "card_present" | "card_online" | "marketplace" | "gift_card";
   amount: number;
   tip: number;
   tendered: number | null;
@@ -428,6 +450,7 @@ export interface OrderRefund {
 
 export interface OrderDetail extends NativeOrder {
   refundTotal: number;
+  amountDue: number;
   payments: OrderPayment[];
   refunds: OrderRefund[];
 }
@@ -446,6 +469,7 @@ export interface DayOrderRow {
   paymentMethod: PaymentMethod | null;
   paymentStatus: string | null;
   refundTotal: number;
+  amountDue: number;
   tenders: string[];
 }
 
@@ -455,7 +479,7 @@ export interface DayOrders {
   orders: DayOrderRow[];
 }
 
-export type DrawerKind = "cash_sale" | "paid_in" | "paid_out" | "cash_refund" | "drop";
+export type DrawerKind = "cash_sale" | "gift_card_sale" | "paid_in" | "paid_out" | "cash_refund" | "drop";
 
 export interface CashDrawer {
   id: number;
@@ -493,6 +517,8 @@ export interface DayReport {
   refunds: number;
   voids: number;
   voidValue: number;
+  giftCardsSold: number;
+  giftCardsSoldCash: number;
   byChannel: { channel: OrderChannel; orders: number; netSales: number }[];
   byTender: { method: string; payments: number; amount: number; refunded: number; net: number }[];
 }
@@ -505,4 +531,107 @@ export interface CashDay {
   drawer: CashDrawer | null;
   movements: DrawerMovement[];
   report: DayReport;
+}
+
+// ── loyalty and gift cards (SPEC-383 / backend SPEC-398) ─────────────────────
+
+export type RewardKind = "amount_off" | "free_item";
+
+export interface LoyaltyProgram {
+  enabled: boolean;
+  name: string;
+  pointsPerUnit: number;
+  welcomePoints: number;
+}
+
+export interface LoyaltyReward {
+  id: number;
+  name: string;
+  points: number;
+  kind: RewardKind;
+  value: number | null;
+  itemId: number | null;
+  isActive: boolean;
+  sort: number;
+}
+
+export interface LoyaltyOverview {
+  program: LoyaltyProgram;
+  rewards: LoyaltyReward[];
+  members: number;
+  pointsOutstanding: number;
+}
+
+export interface LoyaltyMember {
+  id: number;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  points: number;
+  joinedAt: string | null;
+  homeBranchId: number | null;
+}
+
+export interface LedgerRow {
+  id: number;
+  kind: "welcome" | "earn" | "redeem" | "reverse" | "restore" | "adjust";
+  points: number;
+  orderId: number | null;
+  branchId: number | null;
+  note: string | null;
+  createdAt: string | null;
+}
+
+export interface MemberDetail extends LoyaltyMember {
+  ledger: LedgerRow[];
+}
+
+export interface GiftCardRow {
+  id: number;
+  last4: string;
+  balance: number;
+  initialValue: number;
+  status: "active" | "disabled";
+  issuedBranchId: number | null;
+  issuedFranchiseeId: number | null;
+  recipientName: string | null;
+  recipientEmail: string | null;
+  createdAt: string | null;
+}
+
+export interface GiftCardTransaction {
+  id: number;
+  kind: "issue" | "reload" | "redeem" | "refund" | "adjust";
+  amount: number;
+  balanceAfter: number;
+  branchId: number | null;
+  orderId: number | null;
+  tender: string | null;
+  note: string | null;
+  createdAt: string | null;
+}
+
+export interface GiftCardDetail extends GiftCardRow {
+  transactions: GiftCardTransaction[];
+}
+
+export interface GiftCardList {
+  cards: GiftCardRow[];
+  totals: { cards: number; outstanding: number } | null;
+}
+
+export interface GiftCardSale {
+  card: GiftCardRow;
+  /** Shown once, when the card is sold. */
+  code?: string;
+  changeDue: number | null;
+}
+
+export interface GiftCardSettlement {
+  from: string;
+  to: string;
+  franchisees: { franchiseeId: number; name: string; sold: number; redeemed: number; net: number }[];
+  totals: { sold: number; redeemed: number };
+  cards: number;
+  outstanding: number;
 }

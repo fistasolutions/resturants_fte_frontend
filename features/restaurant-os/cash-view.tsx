@@ -207,6 +207,12 @@ function Report({ day }: { day: CashDay }) {
         <Figure label="Refunds" value={formatCurrency(r.refunds)} hint={`${r.voids} voided · ${formatCurrency(r.voidValue)}`} />
         <Figure label="Tax · tips" value={formatCurrency(r.tax)} hint={`tips ${formatCurrency(r.tips)} · delivery fees ${formatCurrency(r.deliveryFees)}`} />
       </div>
+      {r.giftCardsSold > 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Gift cards sold: <span className="font-semibold text-foreground">{formatCurrency(r.giftCardsSold)}</span> ({formatCurrency(r.giftCardsSoldCash)} in cash). Not
+          sales — they count when the cards are spent.
+        </p>
+      ) : null}
       {r.openOrders > 0 ? (
         <p className="text-sm text-warning">
           {r.openOrders} order{r.openOrders === 1 ? " is" : "s are"} still open — they count once they are finished.
@@ -268,7 +274,7 @@ function Report({ day }: { day: CashDay }) {
                   {m.note ? <span className="text-muted-foreground"> · {m.note}</span> : null}
                 </span>
                 <span>
-                  {m.kind === "cash_sale" || m.kind === "paid_in" ? "" : "−"}
+                  {m.kind === "cash_sale" || m.kind === "paid_in" || m.kind === "gift_card_sale" ? "" : "−"}
                   {formatCurrency(m.amount)}
                 </span>
               </li>
