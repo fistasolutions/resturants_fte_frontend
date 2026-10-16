@@ -239,9 +239,11 @@ export interface OrderInput {
   source?: string | null;
   /** Settle at once at the counter. */
   tender?: Tender | null;
-  /** SPEC-383: a gift card paying what it holds, a reward (counter only), joining the program. */
+  /** SPEC-383: a gift card paying what it holds, a reward, joining the program. */
   giftCardCode?: string | null;
   rewardId?: number | null;
+  /** SPEC-399 (backend SPEC-419): online, the session an emailed code opened. */
+  loyaltyToken?: string | null;
   loyaltyJoin?: boolean;
   /** SPEC-387: the ad that brought the guest (online orders only). */
   attribution?: Attribution | null;
@@ -1118,3 +1120,11 @@ export interface LaborDaypart {
 }
 
 export type WasteReason = "expired" | "dropped" | "overcooked" | "returned" | "other";
+
+/** SPEC-399 (backend SPEC-419): a member's proven session at online checkout. */
+export interface LoyaltySession {
+  token: string;
+  expiresIn: number;
+  points: number;
+  rewards: { id: number; name: string; points: number; affordable: boolean }[];
+}

@@ -239,6 +239,7 @@ export function orderBody(input: OrderInput): Record<string, unknown> {
     tender: input.tender ? { method: input.tender.method, amount_tendered: input.tender.amountTendered ?? null, code: input.tender.code ?? null } : null,
     gift_card_code: input.giftCardCode || null,
     reward_id: input.rewardId ?? null,
+    loyalty_token: input.loyaltyToken ?? null,
     loyalty_join: input.loyaltyJoin ?? false,
     attribution: attributionBody(input.attribution),
   };

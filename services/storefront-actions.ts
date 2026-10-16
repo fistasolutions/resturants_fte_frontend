@@ -5,7 +5,7 @@
 import { proxyUrl } from "@/lib/client-api";
 import { fromApi } from "@/lib/restaurant-api";
 import { orderBody } from "@/lib/restaurant-os";
-import type { OrderInput, OrderQuote, OrderTakerAnswer, OrderTakerTurn, PlacedOrder, TrackRating } from "@/types/restaurant-os";
+import type { LoyaltySession, OrderInput, OrderQuote, OrderTakerAnswer, OrderTakerTurn, PlacedOrder, TrackRating } from "@/types/restaurant-os";
 
 export class StorefrontError extends Error {
   constructor(
@@ -124,4 +124,27 @@ export async function checkPublicGiftCard(slug: string, code: string): Promise<{
   });
   if (!response.ok) throw new StorefrontError("No gift card with that code.", response.status);
   return fromApi(await response.json());
+}
+
+async function postJson<T>(path: string, body: unknown, fallback: string): Promise<T> {
+  const response = await fetch(proxyUrl(path), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new StorefrontError(payload?.error?.message ?? fallback, response.status);
+  }
+  return fromApi<T>(await response.json());
+}
+
+/** SPEC-399: email a member the code that proves the phone is theirs (the same answer for anyone). */
+export function requestLoyaltyCode(slug: string, phone: string): Promise<{ sent: boolean }> {
+  return postJson(`/storefront/${encodeURIComponent(slug)}/loyalty/code`, { phone }, "The code could not be sent.");
+}
+
+/** SPEC-399: the emailed code → a 30-minute session for using a reward on this order. */
+export function verifyLoyaltyCode(slug: string, phone: string, code: string): Promise<LoyaltySession> {
+  return postJson(`/storefront/${encodeURIComponent(slug)}/loyalty/verify`, { phone, code }, "That code is not right or has expired.");
 }

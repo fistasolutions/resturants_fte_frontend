@@ -16,12 +16,14 @@ import { CartPanel } from "@/features/restaurant-os/cart-panel";
 import { ItemBuilder } from "@/features/restaurant-os/item-builder";
 import { currentAttribution, rememberAttribution } from "@/features/storefront/attribution-store";
 import { OrderTakerChat } from "@/features/storefront/order-taker-chat";
+import { UsePoints } from "@/features/storefront/use-points";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { storefrontQueries } from "@/lib/queries/storefront";
 import { quoteKeyLines } from "@/lib/restaurant-os";
 import { cn } from "@/lib/utils";
 import { checkPublicGiftCard, placePublicOrder, quotePublicOrder } from "@/services/storefront-actions";
 import { earnPreview, formatCodeInput, isCompleteCode } from "@/lib/loyalty";
+import { START, orderReward, pointsStep, type PointsState } from "@/lib/loyalty-online";
 import { GeoMap } from "@/features/restaurant-os/geo-map";
 import type { LatLng } from "@/lib/geo-map";
 import type { CartLineInput, MenuEntry, OrderChannel, OrderInput, PaymentMethod, PlacedOrder, PublicBranch, PublicMenu } from "@/types/restaurant-os";
@@ -100,6 +102,15 @@ function Checkout({
   const [giftNote, setGiftNote] = useState<string | null>(null);
   const [join, setJoin] = useState(false);
   const [pin, setPin] = useState<LatLng | null>(point);
+  const [points, setPoints] = useState<PointsState>(START);
+  const [rewardId, setRewardId] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const pointsState = pointsStep(points, phone, now);
+  const reward = orderReward(pointsState, rewardId);
 
   const input: OrderInput = {
     branchId: branch.id,
@@ -117,7 +128,9 @@ function Checkout({
         : null,
     paymentMethod: payment,
     giftCardCode: isCompleteCode(giftCode) ? giftCode : null,
-    loyaltyJoin: Boolean(loyalty?.enabled) && join,
+    loyaltyJoin: Boolean(loyalty?.enabled) && join && pointsState.phase !== "proved",
+    rewardId: reward.rewardId,
+    loyaltyToken: reward.loyaltyToken,
   };
   const checkGift = async () => {
     setGiftNote(null);
@@ -129,7 +142,7 @@ function Checkout({
     }
   };
   const quote = useQuery({
-    queryKey: ["storefront", "quote", slug, branch.id, mode, quoteKeyLines(lines), input.coupon, input.tip, pin?.lat ?? null, pin?.lng ?? null],
+    queryKey: ["storefront", "quote", slug, branch.id, mode, quoteKeyLines(lines), input.coupon, input.tip, pin?.lat ?? null, pin?.lng ?? null, reward.rewardId, reward.loyaltyToken],
     queryFn: () => quotePublicOrder(slug, input),
     enabled: lines.length > 0,
     placeholderData: keepPreviousData,
@@ -246,6 +259,17 @@ function Checkout({
         {giftNote ? <p className="text-xs text-muted-foreground">{giftNote}</p> : null}
       </div>
       {loyalty?.enabled ? (
+        <UsePoints
+          slug={slug}
+          programName={loyalty.name}
+          phone={phone}
+          state={pointsState}
+          onState={setPoints}
+          rewardId={reward.rewardId}
+          onReward={setRewardId}
+        />
+      ) : null}
+      {loyalty?.enabled && pointsState.phase !== "proved" ? (
         <label className="flex items-center gap-2 text-sm">
           <Checkbox checked={join} onCheckedChange={(v) => setJoin(v === true)} /> Join {loyalty.name} and earn
           {quote.data ? ` ${earnPreview(quote.data.cart.subtotal - quote.data.cart.discount, loyalty.pointsPerUnit)}` : ""} points on this order

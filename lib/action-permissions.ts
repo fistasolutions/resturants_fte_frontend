@@ -407,6 +407,8 @@ export const ACTION_PERMISSIONS: Record<string, ActionNeed> = {
   "storefront-actions:ratePublicOrder": "member",
   "storefront-actions:chatOrderTaker": "member",
   "storefront-actions:sendCateringInquiry": "member",
+  "storefront-actions:requestLoyaltyCode": "member",
+  "storefront-actions:verifyLoyaltyCode": "member",
   // services/team.ts
   "team:createRole": ["roles.manage"],
   "team:deleteRole": ["roles.manage"],

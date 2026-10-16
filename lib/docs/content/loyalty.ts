@@ -9,7 +9,7 @@ export const loyaltyDoc = defineDoc({
   tagline: "The brand's points program and its rewards, every member's points, the gift cards sold, and what each franchise holds for the others.",
   sources: ["Orders from the POS and the brand's online ordering", "Gift cards sold at the counter"],
   refresh: "Live",
-  updated: "2026-10-15",
+  updated: "2026-10-16",
   hero: "orders",
   heroCaption: "The restaurant screens are captured on the next capture run; shown is Orders, the store-side page this one sits beside.",
   whatItIs: [
@@ -24,7 +24,7 @@ export const loyaltyDoc = defineDoc({
     "A guest joins at the counter (Join in the caller panel) or when ordering online. Joining gives the welcome points once.",
     "When a member's order is finished, it earns points on its food (subtotal less discounts), worked out by the backend.",
     "At the counter, a member's rewards show in the caller panel; Use prices the reward into the order and the points leave with it. Cancelling the order gives them back; a refund takes back the points the refunded food earned.",
-    "Rewards are used at the store, not online: there is no way yet to prove online that a phone number is the guest's own.",
+    "Rewards are used at the counter by looking the guest up by phone, and online at checkout once the member proves the phone is theirs: Use your points emails a 6-digit code to the address on their membership (it works for 10 minutes, 5 tries; at most 3 codes in 15 minutes), and the confirmed code lets them pick a reward for the next 30 minutes. A member with no email on file uses rewards at the store. The answer to asking for a code is the same for anyone, so the page never tells who is a member.",
     "A gift card is sold or reloaded at the counter for cash or by card. Its code is shown once; afterwards only its last four exist anywhere. Selling a card is not a sale — the money counts as sales when the card is spent.",
     "A gift card pays what it holds, at the counter, at the door or online; the rest is paid in cash, by card, or by card online.",
   ],
