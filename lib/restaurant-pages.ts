@@ -65,6 +65,13 @@ export const OPS_COACH_PAGE = {
   periodTabs: [] as string[],
 } as const;
 
+export const REPUTATION_PAGE = {
+  base: "/reputation",
+  title: "Reputation Manager",
+  description: "Every guest's rating of their order, what the ratings say branch by branch, and a reply to every unhappy guest.",
+  periodTabs: [] as string[],
+} as const;
+
 export const CASH_PAGE = {
   base: "/cash",
   title: "Cash & Day Close",

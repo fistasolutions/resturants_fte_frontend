@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChefHat,
   ClipboardCheck,
+  Star,
   ClipboardList,
   Database,
   FileText,
@@ -111,6 +112,8 @@ export const navItems: NavItem[] = [
   { title: "Report Builder", href: "/report-fte", icon: NotebookPen, enabled: true, within: "/employees" },
   // SPEC-385 (backend SPEC-402): a restaurant brand's own employee.
   { title: "Ops Coach", href: "/ops-coach", icon: ClipboardCheck, enabled: true, within: "/employees" },
+  // SPEC-390 (backend SPEC-408): guests' ratings and the replies to them.
+  { title: "Reputation Manager", href: "/reputation", icon: Star, enabled: true, within: "/employees" },
   { title: "Product Analyst", href: "/products", icon: Package, enabled: true },
   { title: "Inventory Analyst", href: "/inventory", icon: Boxes, enabled: true },
   // Raw order browsing + the report drill-down target (SPEC-039; owner

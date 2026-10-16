@@ -14,7 +14,9 @@ export type EmployeeKey =
   | "email_marketing"
   | "customer_support"
   /** SPEC-385: a restaurant brand's own employee (backend SPEC-402). */
-  | "ops_coach";
+  | "ops_coach"
+  /** SPEC-390: a restaurant brand's own employee (backend SPEC-408). */
+  | "reputation";
 
 export type FigureKind = "count" | "money";
 

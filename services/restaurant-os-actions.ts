@@ -13,6 +13,7 @@ import type {
   CashDrawer,
   CoachDay,
   CoachEmailResult,
+  ReplyState,
   DeliveryZone,
   DriverLink,
   CatalogCategory,
@@ -363,6 +364,20 @@ export function dispatchRun(driverId: number, orderIds: number[]): Promise<{ ord
 
 export function runOpsCoach(date: string | null): Promise<CoachDay> {
   return send("POST", "/restaurant/coach/run", { date }, "Running the Ops Coach failed");
+}
+
+// ── the Reputation Manager (SPEC-390 / backend SPEC-408) ──────────────────────
+
+export function draftRatingReply(ratingId: number): Promise<ReplyState> {
+  return send("POST", `/restaurant/reputation/${ratingId}/draft`, undefined, "Drafting the reply failed");
+}
+
+export function editRatingReply(ratingId: number, reply: string): Promise<ReplyState> {
+  return send("PATCH", `/restaurant/reputation/${ratingId}`, { reply }, "Saving the reply failed");
+}
+
+export function sendRatingReply(ratingId: number, reply: string | null): Promise<ReplyState> {
+  return send("POST", `/restaurant/reputation/${ratingId}/send`, { reply }, "Sending the reply failed");
 }
 
 export function emailOpsCoach(date: string): Promise<CoachEmailResult> {

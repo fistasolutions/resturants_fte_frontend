@@ -23,6 +23,7 @@ import { integrationsDoc } from "@/lib/docs/content/integrations";
 import { cashDoc } from "@/lib/docs/content/cash";
 import { kitchenDoc } from "@/lib/docs/content/kitchen";
 import { opsCoachDoc } from "@/lib/docs/content/ops-coach";
+import { reputationDoc } from "@/lib/docs/content/reputation";
 import { loyaltyDoc } from "@/lib/docs/content/loyalty";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
@@ -69,6 +70,7 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   reportsDoc,
   reportFteDoc,
   opsCoachDoc,
+  reputationDoc,
   productsDoc,
   menuDoc,
   dataManagerDoc,

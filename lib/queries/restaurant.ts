@@ -10,6 +10,7 @@ import type {
   CallerLookup,
   CashDay,
   CoachDay,
+  ReputationData,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -129,6 +130,12 @@ export const restaurantPaths = {
   loyalty: (): string => "/restaurant/loyalty",
   zones: (branchId: number): string => `/restaurant/branches/${branchId}/zones`,
   coach: (date: string | null): string => `/restaurant/coach${date ? `?date=${encodeURIComponent(date)}` : ""}`,
+  reputation: (days: number, branchId: number | null, stars: number | null): string => {
+    const params = new URLSearchParams({ days: String(days) });
+    if (branchId != null) params.set("branch_id", String(branchId));
+    if (stars != null) params.set("stars", String(stars));
+    return `/restaurant/reputation?${params.toString()}`;
+  },
   batches: (branchId: number): string => `/restaurant/kitchen/branches/${branchId}/batches`,
   loyaltyMembers: (q: string | null): string => `/restaurant/loyalty/members${q ? `?q=${encodeURIComponent(q)}` : ""}`,
   loyaltyMember: (id: number): string => `/restaurant/loyalty/members/${id}`,
@@ -277,6 +284,10 @@ export const restaurantQueries = {
   coach: (date: string | null) =>
     defineQuery<CoachDay>([...RESTAURANT_KEY, "coach", date], async (api) =>
       fromApi<CoachDay>(await api(restaurantPaths.coach(date))),
+    ),
+  reputation: (days: number, branchId: number | null, stars: number | null) =>
+    defineQuery<ReputationData>([...RESTAURANT_KEY, "reputation", days, branchId, stars], async (api) =>
+      fromApi<ReputationData>(await api(restaurantPaths.reputation(days, branchId, stars))),
     ),
   zones: (branchId: number) =>
     defineQuery<DeliveryZone[]>([...RESTAURANT_KEY, "zones", branchId], async (api) =>

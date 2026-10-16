@@ -38,7 +38,7 @@ export function moodFor(status: EmployeeStatus): Mood {
 }
 
 /** Which prop each employee holds — the drawing keys on it. */
-export type CharacterKind = "telescope" | "megaphone" | "target" | "ledger" | "clipboard" | "envelope" | "headset" | "stopwatch";
+export type CharacterKind = "telescope" | "megaphone" | "target" | "ledger" | "clipboard" | "envelope" | "headset" | "stopwatch" | "star";
 
 export const CHARACTERS: Record<EmployeeKey, { kind: CharacterKind; does: string }> = {
   spotlight: { kind: "telescope", does: "searching for the pages worth writing" },
@@ -49,6 +49,7 @@ export const CHARACTERS: Record<EmployeeKey, { kind: CharacterKind; does: string
   email_marketing: { kind: "envelope", does: "writing to the store's customers at the moment they are due" },
   customer_support: { kind: "headset", does: "answering customers with the real order behind every reply" },
   ops_coach: { kind: "stopwatch", does: "timing every branch's day and naming the one thing to fix" },
+  reputation: { kind: "star", does: "reading every guest's rating and answering the unhappy ones" },
 };
 
 export interface Gaze {

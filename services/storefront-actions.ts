@@ -5,7 +5,7 @@
 import { proxyUrl } from "@/lib/client-api";
 import { fromApi } from "@/lib/restaurant-api";
 import { orderBody } from "@/lib/restaurant-os";
-import type { OrderInput, OrderQuote, PlacedOrder } from "@/types/restaurant-os";
+import type { OrderInput, OrderQuote, PlacedOrder, TrackRating } from "@/types/restaurant-os";
 
 export class StorefrontError extends Error {
   constructor(
@@ -39,6 +39,23 @@ export function quotePublicOrder(slug: string, input: OrderInput): Promise<Order
 
 export function placePublicOrder(slug: string, input: OrderInput): Promise<PlacedOrder> {
   return post(`/storefront/${encodeURIComponent(slug)}/orders`, input, "Placing the order failed.");
+}
+
+/** SPEC-390: the guest rates the order they tracked — once, after it reached them. */
+export async function ratePublicOrder(
+  token: string,
+  rating: { stars: number; tags: string[]; comment: string | null },
+): Promise<TrackRating> {
+  const response = await fetch(proxyUrl(`/storefront/track/${encodeURIComponent(token)}/rating`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(rating),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw new StorefrontError(payload?.error?.message ?? "The rating could not be saved.", response.status);
+  }
+  return fromApi<TrackRating>(await response.json());
 }
 
 /** SPEC-383: what a gift card holds, by its code. A wrong code reads "No gift card with that code". */

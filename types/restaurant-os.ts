@@ -427,6 +427,9 @@ export interface TrackedOrder extends NativeOrder {
   /** SPEC-384: while out for delivery — the driver's fresh position and the guest's home. */
   driverLocation?: { lat: number; lng: number; locatedAt: string | null } | null;
   destination?: { lat: number; lng: number } | null;
+  /** SPEC-390: the tracker asks for a rating once the order has reached the guest. */
+  canRate?: boolean;
+  rating?: TrackRating | null;
 }
 
 // ── payments, refunds and the drawer (SPEC-380 / backend SPEC-395) ───────────
@@ -748,4 +751,60 @@ export interface CoachEmailResult {
   sent: number;
   skipped: { branchId: number; reason: string }[];
   failed: { branchId: number; reason: string | null }[];
+}
+
+// ── the Reputation Manager (SPEC-390 / backend SPEC-408) ─────────────────────
+
+export type RatingTag =
+  | "late"
+  | "cold"
+  | "missing_item"
+  | "wrong_item"
+  | "rude"
+  | "great_taste"
+  | "hot_fresh"
+  | "fast"
+  | "friendly";
+
+export type ReplyStatus = "none" | "drafted" | "sent";
+
+export interface GuestRating {
+  id: number;
+  orderNumber: number | null;
+  branchId: number;
+  branch: string;
+  guest: string | null;
+  stars: number;
+  tags: RatingTag[];
+  comment: string | null;
+  needsReply: boolean;
+  replyStatus: ReplyStatus;
+  replyDraft: string | null;
+  replyText: string | null;
+  repliedAt: string | null;
+  createdAt: string | null;
+}
+
+export interface ReputationData {
+  days: number;
+  summary: { count: number; average: number | null; happyShare: number | null; unhappyShare: number | null };
+  themes: { tag: RatingTag; label: string; kind: "complaint" | "praise"; count: number; share: number }[];
+  branches: { branchId: number; branch: string; count: number; average: number; topComplaint: string | null; needsReply: number }[];
+  needsReply: number;
+  ratings: GuestRating[];
+}
+
+export interface ReplyState {
+  id: number;
+  replyStatus: ReplyStatus;
+  replyDraft: string | null;
+  replyText: string | null;
+  repliedAt: string | null;
+  sentBy?: "email" | "recorded";
+}
+
+export interface TrackRating {
+  stars: number;
+  tags: RatingTag[];
+  comment: string | null;
 }

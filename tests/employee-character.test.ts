@@ -60,6 +60,7 @@ describe("characters", () => {
       "finance",
       "ops_coach",
       "report-fte",
+      "reputation",
       "social",
       "spotlight",
     ]);

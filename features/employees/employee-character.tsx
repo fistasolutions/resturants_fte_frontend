@@ -162,6 +162,13 @@ function Hair({ kind }: { kind: CharacterKind }) {
           <path d="M35 36 Q64 26 93 36 L93 42 Q64 32 35 42 Z" fill={ACCENT} stroke={STROKE} strokeWidth={1.8} />
         </>
       );
+    case "star":
+      // A side-swept bob (SPEC-390).
+      return (
+        <>
+          <path d="M36 44 Q36 20 64 20 Q92 20 92 44 Q92 52 88 56 Q86 36 64 32 Q48 30 40 40 Q38 50 36 56 Z" fill={STROKE} />
+        </>
+      );
     case "envelope":
       // A high ponytail (SPEC-345).
       return (
@@ -261,6 +268,20 @@ function Prop({ kind }: { kind: CharacterKind }) {
             <path d="M110 26 L110 16" stroke={ACCENT} strokeWidth={2.4} strokeLinecap="round" />
           </g>
           <circle cx={110} cy={26} r={2} fill={STROKE} />
+        </g>
+      );
+    case "star":
+      // SPEC-390: a rating star that twinkles while the card is active.
+      return (
+        <g className="emp-prop emp-prop-star">
+          <path
+            d="M110 8 L114.7 18.6 L126 19.8 L117.5 27.4 L120 38.6 L110 32.8 L100 38.6 L102.5 27.4 L94 19.8 L105.3 18.6 Z"
+            fill={ACCENT}
+            stroke={STROKE}
+            strokeWidth={2.2}
+            strokeLinejoin="round"
+          />
+          <circle className="emp-dot" cx={124} cy={8} r={2.4} fill={STROKE} />
         </g>
       );
     case "headset":

@@ -4,6 +4,7 @@ import { Check, Phone } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { GeoMap } from "@/features/restaurant-os/geo-map";
+import { RateOrder } from "@/features/storefront/rate-order";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { distanceKm, formatKm } from "@/lib/geo-map";
 import { storefrontQueries } from "@/lib/queries/storefront";
@@ -138,6 +139,7 @@ export function TrackView({ token, paid = false }: { token: string; paid?: boole
           <Phone className="size-4" aria-hidden /> {order.branchPhone}
         </a>
       ) : null}
+      {order.canRate || order.rating ? <RateOrder token={token} canRate={!!order.canRate} rating={order.rating ?? null} /> : null}
       <p className="text-xs text-muted-foreground">This page updates by itself.</p>
     </main>
   );

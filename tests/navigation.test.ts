@@ -35,7 +35,7 @@ describe("the sidebar and its hubs (SPEC-290)", () => {
 
   it("keeps the employees as destinations, entered through the hub", () => {
     const within = itemsWithin("/employees").map((item) => item.href);
-    expect(within).toEqual(["/spotlight", "/social", "/ads", "/email-marketing", "/customer-support", "/data-manager", "/report-fte", "/ops-coach"]);
+    expect(within).toEqual(["/spotlight", "/social", "/ads", "/email-marketing", "/customer-support", "/data-manager", "/report-fte", "/ops-coach", "/reputation"]);
     for (const item of navItems) {
       if (item.within) expect(navItems.some((hub) => hub.href === item.within && !hub.within)).toBe(true);
     }
@@ -72,6 +72,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
       ["Accounts Payable", "/employees/finance"],
       ["Report Builder", "/report-fte"],
       ["Ops Coach", "/ops-coach"],
+      ["Reputation Manager", "/reputation"],
     ]);
   });
 
@@ -103,6 +104,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
       "/data-manager",
       "/report-fte",
       "/ops-coach",
+      "/reputation",
     ]);
   });
 
@@ -114,7 +116,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
   });
 
   it("hides nothing when the workspace says nothing", () => {
-    expect(visibleItems(hubChildren("/employees"), null)).toHaveLength(9);
+    expect(visibleItems(hubChildren("/employees"), null)).toHaveLength(10);
   });
 
   it("highlights only the employee being viewed", () => {

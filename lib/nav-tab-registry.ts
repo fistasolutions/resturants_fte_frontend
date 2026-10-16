@@ -75,6 +75,8 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/loyalty": LOYALTY_TABS.map((key) => ({ key, label: LOYALTY_TAB_LABELS[key] })),
   // SPEC-385: the Ops Coach is one screen; listed so the hub's preferences cover every employee.
   "/ops-coach": [],
+  // SPEC-390: the Reputation Manager is one screen.
+  "/reputation": [],
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };
