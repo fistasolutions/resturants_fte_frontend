@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyPanel, FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
+import { FieldDialog } from "@/features/restaurant-os/field-dialog";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { OVERTIME_LABELS, ROLE_LABELS, WASTE_REASON_LABELS, addDays, addPlanned, mondayOf, pct, type BackOfficeTab, type PlannedDraft } from "@/lib/back-office";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
+import { parseBreakMinutes } from "@/lib/restaurant-forms";
 import {
   addCrewMember,
   addIngredient,
@@ -24,7 +26,7 @@ import {
   recordDelivery,
   saveSchedule,
 } from "@/services/restaurant-os-actions";
-import type { CrewMember, CrewRole, Ingredient, WasteReason } from "@/types/restaurant-os";
+import type { ClockShift, CrewMember, CrewRole, Ingredient, WasteReason } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
 const SELECT =
@@ -65,6 +67,8 @@ function ClockTab({ branchId }: { branchId: number }) {
   const [clockWith, setClockWith] = useState("");
   const [breakMin, setBreakMin] = useState("0");
   const [notice, setNotice] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<ClockShift | null>(null);
+  const queryClient = useQueryClient();
 
   if (crew.isError) return <QueryErrorState error={crew.error} onRetry={() => void crew.refetch()} />;
   if (!crew.data || !day.data) return <RestaurantSkeleton tiles={2} />;
@@ -127,10 +131,7 @@ function ClockTab({ branchId }: { branchId: number }) {
                     size="sm"
                     variant="outline"
                     disabled={busy}
-                    onClick={() => {
-                      const value = window.prompt("Break in minutes", String(s.breakMinutes));
-                      if (value !== null) void run(() => fixShift(s.id, { breakMinutes: Number(value) || 0 }), ["clock-day"]);
-                    }}
+                    onClick={() => setFixing(s)}
                   >
                     Break {s.breakMinutes} min
                   </RoleButton>
@@ -180,6 +181,20 @@ function ClockTab({ branchId }: { branchId: number }) {
         </div>
       </Panel>
       <FormError message={error} />
+      {fixing ? (
+        <FieldDialog
+          title={`Correct ${fixing.name}'s break`}
+          description="The shift's hours and cost are worked out again without the break, and the day's labor is re-added."
+          fields={[{ key: "minutes", label: "Break (minutes)", defaultValue: String(fixing.breakMinutes), inputMode: "numeric" }]}
+          confirmLabel="Save the break"
+          parse={(v) => parseBreakMinutes(v.minutes ?? "")}
+          save={async (minutes) => {
+            await fixShift(fixing.id, { breakMinutes: minutes });
+            await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "clock-day"] });
+          }}
+          onClose={() => setFixing(null)}
+        />
+      ) : null}
     </div>
   );
 }

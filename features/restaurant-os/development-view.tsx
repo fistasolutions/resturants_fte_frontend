@@ -10,9 +10,11 @@ import { RoleButton } from "@/components/shared/role-gate";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyPanel, FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
+import { FieldDialog } from "@/features/restaurant-os/field-dialog";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { OPENING_LABELS, PROSPECT_LABELS, movableOpeningStages, movableProspectStages } from "@/lib/development";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
+import { parsePercentRate, parseStoreCode } from "@/lib/restaurant-forms";
 import {
   addOpening,
   addProspect,
@@ -21,7 +23,7 @@ import {
   updateOpening,
   updateProspect,
 } from "@/services/restaurant-os-actions";
-import type { OpeningStage, ProspectStage } from "@/types/restaurant-os";
+import type { Opening, OpeningStage, Prospect, ProspectStage } from "@/types/restaurant-os";
 
 const SELECT =
   "h-8 rounded-input border border-input bg-background px-2 text-sm text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none";
@@ -35,14 +37,20 @@ export function DevelopmentView() {
   const [error, setError] = useState<string | null>(null);
   const [prospect, setProspect] = useState({ name: "", market: "", email: "", phone: "", nextStep: "", nextStepOn: "" });
   const [opening, setOpening] = useState({ franchiseeId: 0, name: "", city: "", targetOpenOn: "" });
+  const [signing, setSigning] = useState<Prospect | null>(null);
+  const [toOpen, setToOpen] = useState<Opening | null>(null);
+
+  const refresh = () =>
+    Promise.all(
+      ["development", "franchisees", "branches"].map((key) => queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, key] })),
+    );
 
   const run = async (body: () => Promise<unknown>) => {
     setBusy(true);
     setError(null);
     try {
       await body();
-      await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "development"] });
-      await queryClient.invalidateQueries({ queryKey: [...RESTAURANT_KEY, "franchisees"] });
+      await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "That did not work.");
     } finally {
@@ -149,11 +157,7 @@ export function DevelopmentView() {
                       size="sm"
                       variant="outline"
                       disabled={busy}
-                      onClick={() => {
-                        const royalty = window.prompt("Royalty rate (e.g. 0.06)", "0.06");
-                        const fund = royalty === null ? null : window.prompt("Ad fund rate (e.g. 0.04)", "0.04");
-                        if (royalty !== null && fund !== null) void run(() => signProspect(p.id, Number(royalty), Number(fund)));
-                      }}
+                      onClick={() => setSigning(p)}
                     >
                       <PenLine aria-hidden /> Sign
                     </RoleButton>
@@ -233,10 +237,7 @@ export function DevelopmentView() {
                       size="sm"
                       variant="outline"
                       disabled={busy}
-                      onClick={() => {
-                        const code = window.prompt("The new branch's store number");
-                        if (code) void run(() => openStore(o.id, code.trim()));
-                      }}
+                      onClick={() => setToOpen(o)}
                     >
                       <Store aria-hidden /> Open
                     </RoleButton>
@@ -247,6 +248,43 @@ export function DevelopmentView() {
           </ul>
         )}
       </Panel>
+      {signing ? (
+        <FieldDialog
+          title={`Sign ${signing.name}`}
+          description="Signing creates the franchisee in the network with these rates, which are shares of net sales. A signed prospect is final."
+          fields={[
+            { key: "royalty", label: "Royalty %", defaultValue: "6", inputMode: "decimal" },
+            { key: "fund", label: "Ad fund %", defaultValue: "4", inputMode: "decimal" },
+          ]}
+          confirmLabel="Sign"
+          parse={(v) => {
+            const royalty = parsePercentRate(v.royalty ?? "", "royalty");
+            if (!royalty.ok) return royalty;
+            const fund = parsePercentRate(v.fund ?? "", "ad fund");
+            if (!fund.ok) return fund;
+            return { ok: true, value: { royalty: royalty.value, fund: fund.value } };
+          }}
+          save={async ({ royalty, fund }) => {
+            await signProspect(signing.id, royalty, fund);
+            await refresh();
+          }}
+          onClose={() => setSigning(null)}
+        />
+      ) : null}
+      {toOpen ? (
+        <FieldDialog
+          title={`Open ${toOpen.name}`}
+          description="Opening creates the branch, open, under its franchisee. Give it the store number it will trade under; an open store is final."
+          fields={[{ key: "code", label: "Store number", defaultValue: "", placeholder: "e.g. 301" }]}
+          confirmLabel="Open the store"
+          parse={(v) => parseStoreCode(v.code ?? "")}
+          save={async (code) => {
+            await openStore(toOpen.id, code);
+            await refresh();
+          }}
+          onClose={() => setToOpen(null)}
+        />
+      ) : null}
     </div>
   );
 }
