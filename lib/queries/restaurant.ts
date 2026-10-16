@@ -14,6 +14,7 @@ import type {
   MenuEngineerData,
   CateringData,
   AuditsData,
+  MarketplaceConnection,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -137,6 +138,7 @@ export const restaurantPaths = {
   catering: (): string => "/restaurant/catering",
   audits: (branchId: number | null): string => `/restaurant/audits${branchId != null ? `?branch_id=${branchId}` : ""}`,
   orderTaker: (): string => "/restaurant/order-taker",
+  marketplaces: (): string => "/restaurant/marketplaces",
   reputation: (days: number, branchId: number | null, stars: number | null): string => {
     const params = new URLSearchParams({ days: String(days) });
     if (branchId != null) params.set("branch_id", String(branchId));
@@ -299,6 +301,10 @@ export const restaurantQueries = {
   audits: (branchId: number | null) =>
     defineQuery<AuditsData>([...RESTAURANT_KEY, "audits", branchId], async (api) =>
       fromApi<AuditsData>(await api(restaurantPaths.audits(branchId))),
+    ),
+  marketplaces: () =>
+    defineQuery<MarketplaceConnection[]>([...RESTAURANT_KEY, "marketplaces"], async (api) =>
+      fromApi<{ connections: MarketplaceConnection[] }>(await api(restaurantPaths.marketplaces())).connections,
     ),
   orderTaker: () =>
     defineQuery<{ enabled: boolean }>([...RESTAURANT_KEY, "order-taker"], async (api) =>

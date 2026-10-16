@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { MarketplacesPanel } from "@/features/restaurant/marketplaces-panel";
 import { FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { useApiQuery } from "@/hooks/use-api-query";
 import { useCan } from "@/hooks/use-can";
@@ -160,6 +161,7 @@ export function BrandSettingsTab() {
     <div className="space-y-4">
       <Form rules={query.data} />
       <OrderTakerSwitch />
+      <MarketplacesPanel />
     </div>
   );
 }

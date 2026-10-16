@@ -19,6 +19,10 @@ import type {
   CateringInquiry,
   CateringStatus,
   AuditResult,
+  MarketplaceAggregator,
+  MarketplaceConnection,
+  MarketplaceProvider,
+  MarketplaceSecret,
   QscAudit,
   DeliveryZone,
   DriverLink,
@@ -417,6 +421,34 @@ export function recordAudit(
 
 export function closeAuditAction(auditId: number, key: string): Promise<QscAudit> {
   return send("POST", `/restaurant/audits/${auditId}/actions/${encodeURIComponent(key)}/done`, undefined, "Closing the action failed");
+}
+
+// ── marketplace connections (SPEC-393 / backend SPEC-413) ─────────────────────
+
+export function connectMarketplace(
+  branchId: number,
+  provider: MarketplaceProvider,
+  aggregator: MarketplaceAggregator,
+  externalRef: string | null,
+): Promise<MarketplaceSecret> {
+  return send(
+    "POST",
+    "/restaurant/marketplaces",
+    { branch_id: branchId, provider, aggregator, external_ref: externalRef },
+    "Connecting the marketplace failed",
+  );
+}
+
+export function setMarketplaceActive(id: number, active: boolean): Promise<MarketplaceConnection> {
+  return send("POST", `/restaurant/marketplaces/${id}/${active ? "resume" : "pause"}`, undefined, "Saving failed");
+}
+
+export function rotateMarketplace(id: number): Promise<MarketplaceSecret> {
+  return send("POST", `/restaurant/marketplaces/${id}/rotate`, undefined, "Making a new key failed");
+}
+
+export function removeMarketplace(id: number): Promise<void> {
+  return send("DELETE", `/restaurant/marketplaces/${id}`, undefined, "Removing the connection failed");
 }
 
 export function setOrderTaker(enabled: boolean): Promise<{ enabled: boolean }> {

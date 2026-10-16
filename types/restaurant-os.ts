@@ -938,3 +938,29 @@ export interface OrderTakerAnswer {
   cart: OrderTakerProposal | null;
   quote: { lines: { name: string; quantity: number; lineTotal: number; modifiers: { name?: string }[] }[]; subtotal: number; total?: number; errors?: { message: string }[] } | null;
 }
+
+// ── marketplace connections (SPEC-393 / backend SPEC-413) ────────────────────
+
+export type MarketplaceProvider = "doordash" | "ubereats" | "grubhub" | "other";
+export type MarketplaceAggregator = "deliverect" | "generic";
+
+export interface MarketplaceConnection {
+  id: number;
+  branchId: number;
+  branch: string;
+  provider: MarketplaceProvider;
+  aggregator: MarketplaceAggregator;
+  externalRef: string | null;
+  tokenLast4: string;
+  status: "active" | "paused";
+  lastOrderAt: string | null;
+  ordersCount: number;
+  createdAt: string | null;
+}
+
+/** Only on create and rotate: the secret and the two URLs, shown once. */
+export interface MarketplaceSecret extends MarketplaceConnection {
+  token: string;
+  ordersUrl: string;
+  menuUrl: string;
+}
