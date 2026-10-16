@@ -964,3 +964,81 @@ export interface MarketplaceSecret extends MarketplaceConnection {
   ordersUrl: string;
   menuUrl: string;
 }
+
+// ── the back office (SPEC-394 / backend SPEC-414/415) ────────────────────────
+
+export type CrewRole = "crew" | "cook" | "driver" | "shift_lead" | "manager";
+
+export interface CrewMember {
+  id: number;
+  branchId: number;
+  name: string;
+  role: CrewRole;
+  hourlyRate: number;
+  active: boolean;
+}
+
+export interface ClockShift {
+  id: number;
+  staffId: number;
+  name: string;
+  businessDate: string;
+  clockIn: string | null;
+  clockOut: string | null;
+  breakMinutes: number;
+  hours: number | null;
+  cost: number | null;
+  source: "clock" | "edit";
+}
+
+export interface ClockDay {
+  date: string;
+  shifts: ClockShift[];
+  onClock: ClockShift[];
+  hours: number;
+  cost: number;
+}
+
+export interface ScheduleWeek {
+  week: string;
+  days: {
+    day: string;
+    shifts: { id: number; staffId: number; name: string; start: string; end: string; hours: number }[];
+    hours: number;
+    cost: number;
+    expectedSales: number | null;
+    laborShare: number | null;
+    over: boolean;
+  }[];
+}
+
+export interface Ingredient {
+  id: number;
+  name: string;
+  unit: "kg" | "lb" | "l" | "each" | "case";
+  unitCost: number;
+  category: string | null;
+  active: boolean;
+}
+
+export interface BranchInventory {
+  counts: { id: number; countedOn: string; lines: Record<string, number>; countedBy: string; createdAt: string | null }[];
+  receipts: { id: number; receivedOn: string; lines: { itemId: number; quantity: number; unitCost: number }[]; supplier: string | null; receivedBy: string; createdAt: string | null }[];
+}
+
+export type FoodCostVariance =
+  | { ready: false; message: string }
+  | {
+      ready: true;
+      opening: { id: number; countedOn: string };
+      closing: { id: number; countedOn: string };
+      countProblems: string[];
+      actual: number;
+      theoretical: number;
+      variance: number;
+      netSales: number;
+      actualShare: number | null;
+      theoreticalShare: number | null;
+      varianceShare: number | null;
+      items: { itemId: number; name: string; unit: string; used: number; unitCost: number; cost: number }[];
+    };

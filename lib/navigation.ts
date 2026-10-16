@@ -105,6 +105,8 @@ export const navItems: NavItem[] = [
   { title: "Cash & Day Close", href: "/cash", icon: Wallet, enabled: true },
   // SPEC-383 (backend SPEC-398): the points program and gift cards.
   { title: "Loyalty & Gift Cards", href: "/loyalty", icon: Gift, enabled: true },
+  // SPEC-394: the crew, the clock, the schedule, inventory and food cost.
+  { title: "Back Office", href: "/back-office", icon: Warehouse, enabled: true },
   { title: "Operations", href: "/operations", icon: Timer, enabled: true },
   { title: "Guests", href: "/guests", icon: UserRound, enabled: true },
   { title: "Royalties", href: "/royalties", icon: HandCoins, enabled: true },

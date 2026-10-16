@@ -2,6 +2,7 @@
  * The restaurant pages' headers and tabs (frontend SPEC-377) — constants a server layout passes to
  * its client shell, so they live here and not in a `"use client"` file.
  */
+import { BACK_OFFICE_TABS, BACK_OFFICE_TAB_LABELS } from "@/lib/back-office";
 import {
   HQ_TABS,
   KITCHEN_TAB_LABELS,
@@ -90,6 +91,14 @@ export const STANDARDS_PAGE = {
   base: "/standards",
   title: "Brand Standards",
   description: "QSC visits scored against the brand's checklist, the actions each failure creates, and the branches overdue a visit.",
+  periodTabs: [] as string[],
+} as const;
+
+export const BACK_OFFICE_PAGE = {
+  base: "/back-office",
+  title: "Back Office",
+  description: "Each branch's crew and time clock, the week's schedule against expected sales, and inventory counts with food cost against the recipes.",
+  tabs: BACK_OFFICE_TABS.map((key): PageTab => ({ key, label: BACK_OFFICE_TAB_LABELS[key] })),
   periodTabs: [] as string[],
 } as const;
 

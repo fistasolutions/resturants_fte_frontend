@@ -20,6 +20,11 @@ import type {
   CateringStatus,
   AuditResult,
   MarketplaceAggregator,
+  CrewMember,
+  CrewRole,
+  ClockShift,
+  ScheduleWeek,
+  Ingredient,
   MarketplaceConnection,
   MarketplaceProvider,
   MarketplaceSecret,
@@ -421,6 +426,74 @@ export function recordAudit(
 
 export function closeAuditAction(auditId: number, key: string): Promise<QscAudit> {
   return send("POST", `/restaurant/audits/${auditId}/actions/${encodeURIComponent(key)}/done`, undefined, "Closing the action failed");
+}
+
+// ── the back office (SPEC-394 / backend SPEC-414/415) ─────────────────────────
+
+export function addCrewMember(
+  branchId: number,
+  member: { name: string; role: CrewRole; hourlyRate: number; pin: string },
+): Promise<CrewMember> {
+  return send("POST", `/restaurant/branches/${branchId}/staff`, toApi(member), "Adding the person failed");
+}
+
+export function updateCrewMember(
+  staffId: number,
+  change: { name?: string; role?: CrewRole; hourlyRate?: number; pin?: string; active?: boolean },
+): Promise<CrewMember> {
+  return send("PATCH", `/restaurant/staff/${staffId}`, toApi(change), "Saving the person failed");
+}
+
+export function clockPin(branchId: number, pin: string, breakMinutes: number): Promise<{ name: string; state: "in" | "out"; shift: ClockShift }> {
+  return send("POST", `/restaurant/pos/branches/${branchId}/clock`, { pin, break_minutes: breakMinutes }, "Clocking failed");
+}
+
+export function fixShift(shiftId: number, change: { breakMinutes?: number }): Promise<ClockShift> {
+  return send("PATCH", `/restaurant/shifts/${shiftId}`, toApi(change), "Saving the shift failed");
+}
+
+export function saveSchedule(
+  branchId: number,
+  week: string,
+  shifts: { staffId: number; day: string; start: string; end: string }[],
+): Promise<ScheduleWeek> {
+  return send(
+    "PUT",
+    `/restaurant/branches/${branchId}/schedule`,
+    { week, shifts: shifts.map((s) => ({ staff_id: s.staffId, day: s.day, start: s.start, end: s.end })) },
+    "Saving the schedule failed",
+  );
+}
+
+export function addIngredient(item: { name: string; unit: Ingredient["unit"]; unitCost: number; category: string | null }): Promise<Ingredient> {
+  return send("POST", "/restaurant/inventory/items", toApi(item), "Adding the ingredient failed");
+}
+
+export function recordCount(branchId: number, countedOn: string, lines: { itemId: number; quantity: number }[]): Promise<unknown> {
+  return send(
+    "POST",
+    `/restaurant/branches/${branchId}/inventory/counts`,
+    { counted_on: countedOn, lines: lines.map((l) => ({ item_id: l.itemId, quantity: l.quantity })) },
+    "Saving the count failed",
+  );
+}
+
+export function recordDelivery(
+  branchId: number,
+  receivedOn: string,
+  supplier: string | null,
+  lines: { itemId: number; quantity: number; unitCost: number | null }[],
+): Promise<unknown> {
+  return send(
+    "POST",
+    `/restaurant/branches/${branchId}/inventory/receipts`,
+    {
+      received_on: receivedOn,
+      supplier,
+      lines: lines.map((l) => ({ item_id: l.itemId, quantity: l.quantity, unit_cost: l.unitCost })),
+    },
+    "Saving the delivery failed",
+  );
 }
 
 // ── marketplace connections (SPEC-393 / backend SPEC-413) ─────────────────────

@@ -15,6 +15,12 @@ import type {
   CateringData,
   AuditsData,
   MarketplaceConnection,
+  CrewMember,
+  ClockDay,
+  ScheduleWeek,
+  Ingredient,
+  BranchInventory,
+  FoodCostVariance,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -139,6 +145,13 @@ export const restaurantPaths = {
   audits: (branchId: number | null): string => `/restaurant/audits${branchId != null ? `?branch_id=${branchId}` : ""}`,
   orderTaker: (): string => "/restaurant/order-taker",
   marketplaces: (): string => "/restaurant/marketplaces",
+  crew: (branchId: number): string => `/restaurant/branches/${branchId}/staff`,
+  clockDay: (branchId: number, day: string | null): string =>
+    `/restaurant/pos/branches/${branchId}/shifts${day ? `?date=${day}` : ""}`,
+  schedule: (branchId: number, week: string): string => `/restaurant/branches/${branchId}/schedule?week=${week}`,
+  ingredients: (): string => "/restaurant/inventory/items",
+  branchInventory: (branchId: number): string => `/restaurant/branches/${branchId}/inventory`,
+  foodCost: (branchId: number): string => `/restaurant/branches/${branchId}/inventory/variance`,
   reputation: (days: number, branchId: number | null, stars: number | null): string => {
     const params = new URLSearchParams({ days: String(days) });
     if (branchId != null) params.set("branch_id", String(branchId));
@@ -301,6 +314,30 @@ export const restaurantQueries = {
   audits: (branchId: number | null) =>
     defineQuery<AuditsData>([...RESTAURANT_KEY, "audits", branchId], async (api) =>
       fromApi<AuditsData>(await api(restaurantPaths.audits(branchId))),
+    ),
+  crew: (branchId: number) =>
+    defineQuery<CrewMember[]>([...RESTAURANT_KEY, "crew", branchId], async (api) =>
+      fromApi<{ staff: CrewMember[] }>(await api(restaurantPaths.crew(branchId))).staff,
+    ),
+  clockDay: (branchId: number, day: string | null) =>
+    defineQuery<ClockDay>([...RESTAURANT_KEY, "clock-day", branchId, day], async (api) =>
+      fromApi<ClockDay>(await api(restaurantPaths.clockDay(branchId, day))),
+    ),
+  schedule: (branchId: number, week: string) =>
+    defineQuery<ScheduleWeek>([...RESTAURANT_KEY, "schedule", branchId, week], async (api) =>
+      fromApi<ScheduleWeek>(await api(restaurantPaths.schedule(branchId, week))),
+    ),
+  ingredients: () =>
+    defineQuery<Ingredient[]>([...RESTAURANT_KEY, "ingredients"], async (api) =>
+      fromApi<{ items: Ingredient[] }>(await api(restaurantPaths.ingredients())).items,
+    ),
+  branchInventory: (branchId: number) =>
+    defineQuery<BranchInventory>([...RESTAURANT_KEY, "branch-inventory", branchId], async (api) =>
+      fromApi<BranchInventory>(await api(restaurantPaths.branchInventory(branchId))),
+    ),
+  foodCost: (branchId: number) =>
+    defineQuery<FoodCostVariance>([...RESTAURANT_KEY, "food-cost", branchId], async (api) =>
+      fromApi<FoodCostVariance>(await api(restaurantPaths.foodCost(branchId))),
     ),
   marketplaces: () =>
     defineQuery<MarketplaceConnection[]>([...RESTAURANT_KEY, "marketplaces"], async (api) =>

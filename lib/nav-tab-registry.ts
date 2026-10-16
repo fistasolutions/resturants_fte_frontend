@@ -82,6 +82,8 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/catering": [],
   // SPEC-392: one screen.
   "/standards": [],
+  // SPEC-394: the back office's tabs are not hidden one by one (the preferences cookie's size).
+  "/back-office": [],
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };
