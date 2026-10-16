@@ -1024,6 +1024,8 @@ export interface Ingredient {
 export interface BranchInventory {
   counts: { id: number; countedOn: string; lines: Record<string, number>; countedBy: string; createdAt: string | null }[];
   receipts: { id: number; receivedOn: string; lines: { itemId: number; quantity: number; unitCost: number }[]; supplier: string | null; receivedBy: string; createdAt: string | null }[];
+  /** SPEC-396: the waste log's latest entries. */
+  waste?: { id: number; loggedOn: string; itemId: number; quantity: number; reason: string; cost: number; loggedBy: string }[];
 }
 
 export type FoodCostVariance =
@@ -1040,5 +1042,66 @@ export type FoodCostVariance =
       actualShare: number | null;
       theoreticalShare: number | null;
       varianceShare: number | null;
+      /** SPEC-396: the logged waste's cost between the counts, and what is left unexplained. */
+      waste?: number;
+      unexplained?: number;
       items: { itemId: number; name: string; unit: string; used: number; unitCost: number; cost: number }[];
     };
+
+// ── franchise development; waste, prices and labor actuals (SPEC-395/396) ────
+
+export type ProspectStage = "inquiry" | "qualified" | "discovery_day" | "approved" | "signed" | "lost";
+export type OpeningStage = "site_search" | "lease_signed" | "permits" | "build_out" | "training" | "open" | "dropped";
+
+export interface Prospect {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  market: string;
+  stage: ProspectStage;
+  liquidCapital: number | null;
+  unitsWanted: number;
+  source: string | null;
+  notes: string | null;
+  nextStep: string | null;
+  nextStepOn: string | null;
+  franchiseeId: number | null;
+}
+
+export interface Opening {
+  id: number;
+  franchiseeId: number;
+  prospectId: number | null;
+  name: string;
+  city: string | null;
+  stage: OpeningStage;
+  targetOpenOn: string | null;
+  openedOn: string | null;
+  branchId: number | null;
+  notes: string | null;
+  atRisk?: boolean;
+}
+
+export interface DevelopmentData {
+  prospects: Prospect[];
+  openings: Opening[];
+  prospectCounts: Record<ProspectStage, number>;
+  openingCounts: Record<OpeningStage, number>;
+  due: Prospect[];
+  atRisk: Opening[];
+  planned: Opening[];
+}
+
+export interface PriceWatch {
+  since: string;
+  items: { itemId: number; name: string; unit: string; latest: number; baseline: number; itemCost: number; deliveries: number; change: number | null; flagged: boolean }[];
+}
+
+export interface LaborActuals {
+  week: string;
+  days: { day: string; plannedHours: number; plannedCost: number; actualHours: number; actualCost: number; differenceHours: number }[];
+  people: { staffId: number; name: string; hours: number; state: "over" | "near" | "ok" }[];
+}
+
+export type WasteReason = "expired" | "dropped" | "overcooked" | "returned" | "other";

@@ -12,18 +12,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyPanel, FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { useApiQuery } from "@/hooks/use-api-query";
-import { ROLE_LABELS, addDays, addPlanned, mondayOf, pct, type BackOfficeTab, type PlannedDraft } from "@/lib/back-office";
+import { OVERTIME_LABELS, ROLE_LABELS, WASTE_REASON_LABELS, addDays, addPlanned, mondayOf, pct, type BackOfficeTab, type PlannedDraft } from "@/lib/back-office";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
 import {
   addCrewMember,
   addIngredient,
   clockPin,
   fixShift,
+  logWaste,
   recordCount,
   recordDelivery,
   saveSchedule,
 } from "@/services/restaurant-os-actions";
-import type { CrewMember, CrewRole, Ingredient } from "@/types/restaurant-os";
+import type { CrewMember, CrewRole, Ingredient, WasteReason } from "@/types/restaurant-os";
 import { formatCurrency, formatTime } from "@/utils/format";
 
 const SELECT =
@@ -188,6 +189,7 @@ function ClockTab({ branchId }: { branchId: number }) {
 function ScheduleTab({ branchId }: { branchId: number }) {
   const [week, setWeek] = useState(mondayOf(today()));
   const schedule = useApiQuery(restaurantQueries.schedule(branchId, week));
+  const actuals = useApiQuery(restaurantQueries.laborActuals(branchId, week));
   const crew = useApiQuery(restaurantQueries.crew(branchId));
   const { busy, error, run } = useRun();
   const [draft, setDraft] = useState<PlannedDraft[] | null>(null);
@@ -282,6 +284,36 @@ function ScheduleTab({ branchId }: { branchId: number }) {
           {draft !== null ? <span className="text-xs text-muted-foreground">Unsaved changes</span> : null}
         </div>
       </Panel>
+      {actuals.data ? (
+        <Panel title="Planned against worked">
+          <ul className="divide-y divide-border">
+            {actuals.data.days.map((d) => (
+              <li key={d.day} className="flex flex-wrap items-center gap-3 px-4 py-2 text-sm">
+                <span className="w-28 font-medium">{new Date(`${d.day}T00:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  planned {d.plannedHours.toFixed(1)} h · worked {d.actualHours.toFixed(1)} h
+                </span>
+                {d.differenceHours !== 0 ? (
+                  <span className="tabular-nums">
+                    {d.differenceHours > 0 ? "+" : ""}
+                    {d.differenceHours.toFixed(1)} h
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          {actuals.data.people.length ? (
+            <ul className="flex flex-wrap gap-2 border-t border-border p-4 text-sm">
+              {actuals.data.people.map((p) => (
+                <li key={p.staffId} className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1">
+                  {p.name} <span className="tabular-nums">{p.hours.toFixed(1)} h</span>
+                  {p.state !== "ok" ? <Badge variant={p.state === "over" ? "destructive" : "secondary"}>{OVERTIME_LABELS[p.state]}</Badge> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </Panel>
+      ) : null}
       <FormError message={error} />
     </div>
   );
@@ -293,6 +325,8 @@ function InventoryTab({ branchId, isHq }: { branchId: number; isHq: boolean }) {
   const items = useApiQuery(restaurantQueries.ingredients());
   const variance = useApiQuery(restaurantQueries.foodCost(branchId));
   const inventory = useApiQuery(restaurantQueries.branchInventory(branchId));
+  const prices = useApiQuery(restaurantQueries.prices());
+  const [waste, setWaste] = useState({ itemId: 0, quantity: "", reason: "dropped" as WasteReason, day: today() });
   const { busy, error, run } = useRun();
   const [count, setCount] = useState<Record<number, string>>({});
   const [countDay, setCountDay] = useState(today());
@@ -329,6 +363,11 @@ function InventoryTab({ branchId, isHq }: { branchId: number; isHq: boolean }) {
               </p>
             </div>
           </div>
+          {v.waste !== undefined ? (
+            <p className="px-4 pb-2 text-sm text-muted-foreground">
+              Logged waste {formatCurrency(v.waste)} · unexplained {formatCurrency(v.unexplained ?? 0)}
+            </p>
+          ) : null}
           {v.countProblems.length ? (
             <p className="px-4 pb-2 text-sm text-destructive">Check the counts of: {v.countProblems.join(", ")} (more on the shelf than came in).</p>
           ) : null}
@@ -393,6 +432,70 @@ function InventoryTab({ branchId, isHq }: { branchId: number; isHq: boolean }) {
           </div>
         )}
       </Panel>
+      <Panel title="Waste log">
+        <div className="flex flex-wrap items-end gap-2 p-4">
+          <select aria-label="Ingredient wasted" className={SELECT} value={waste.itemId || ""} onChange={(e) => setWaste({ ...waste, itemId: Number(e.target.value) })}>
+            <option value="">Ingredient</option>
+            {active.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          <Input aria-label="Quantity wasted" placeholder="Quantity" type="number" min={0} step="0.01" value={waste.quantity} onChange={(e) => setWaste({ ...waste, quantity: e.target.value })} className="h-9 w-28" />
+          <select aria-label="Reason" className={SELECT} value={waste.reason} onChange={(e) => setWaste({ ...waste, reason: e.target.value as WasteReason })}>
+            {(Object.keys(WASTE_REASON_LABELS) as WasteReason[]).map((reason) => (
+              <option key={reason} value={reason}>
+                {WASTE_REASON_LABELS[reason]}
+              </option>
+            ))}
+          </select>
+          <Input aria-label="Logged on" type="date" value={waste.day} onChange={(e) => setWaste({ ...waste, day: e.target.value })} className="h-9 w-[160px]" />
+          <RoleButton
+            need={["network.manage"]}
+            size="sm"
+            disabled={busy || !waste.itemId || !Number(waste.quantity)}
+            onClick={() =>
+              void run(async () => {
+                await logWaste(branchId, waste.day, waste.itemId, Number(waste.quantity), waste.reason);
+                setWaste({ ...waste, itemId: 0, quantity: "" });
+              }, refreshKeys)
+            }
+          >
+            <Plus aria-hidden /> Log it
+          </RoleButton>
+        </div>
+        {inventory.data.waste?.length ? (
+          <ul className="divide-y divide-border border-t border-border">
+            {inventory.data.waste.slice(0, 8).map((w) => (
+              <li key={w.id} className="flex justify-between gap-3 px-4 py-2 text-sm">
+                <span>
+                  {items.data.find((i) => i.id === w.itemId)?.name ?? "Ingredient"} · {w.quantity} · {WASTE_REASON_LABELS[w.reason as WasteReason] ?? w.reason}
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {w.loggedOn} · {formatCurrency(w.cost)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </Panel>
+      {prices.data && prices.data.items.length ? (
+        <Panel title="Supplier prices · last 90 days">
+          <ul className="divide-y divide-border">
+            {prices.data.items.map((p) => (
+              <li key={p.itemId} className="flex flex-wrap items-center gap-3 px-4 py-2 text-sm">
+                <span className="flex-1">{p.name}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  {formatCurrency(p.latest)} / {p.unit} against {formatCurrency(p.baseline)}
+                </span>
+                <span className="tabular-nums">{p.change === null ? "—" : `${p.change > 0 ? "+" : ""}${pct(p.change)}`}</span>
+                {p.flagged ? <Badge variant="secondary">Price up</Badge> : null}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
       <Panel title="A delivery came in">
         <div className="flex flex-wrap items-end gap-2 p-4">
           <select aria-label="Ingredient" className={SELECT} value={delivery.itemId || ""} onChange={(e) => setDelivery({ ...delivery, itemId: Number(e.target.value) })}>

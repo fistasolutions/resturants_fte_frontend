@@ -21,6 +21,9 @@ import type {
   Ingredient,
   BranchInventory,
   FoodCostVariance,
+  PriceWatch,
+  LaborActuals,
+  DevelopmentData,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -152,6 +155,9 @@ export const restaurantPaths = {
   ingredients: (): string => "/restaurant/inventory/items",
   branchInventory: (branchId: number): string => `/restaurant/branches/${branchId}/inventory`,
   foodCost: (branchId: number): string => `/restaurant/branches/${branchId}/inventory/variance`,
+  prices: (): string => "/restaurant/inventory/prices",
+  laborActuals: (branchId: number, week: string): string => `/restaurant/branches/${branchId}/labor?week=${week}`,
+  development: (): string => "/restaurant/development",
   reputation: (days: number, branchId: number | null, stars: number | null): string => {
     const params = new URLSearchParams({ days: String(days) });
     if (branchId != null) params.set("branch_id", String(branchId));
@@ -338,6 +344,16 @@ export const restaurantQueries = {
   foodCost: (branchId: number) =>
     defineQuery<FoodCostVariance>([...RESTAURANT_KEY, "food-cost", branchId], async (api) =>
       fromApi<FoodCostVariance>(await api(restaurantPaths.foodCost(branchId))),
+    ),
+  prices: () =>
+    defineQuery<PriceWatch>([...RESTAURANT_KEY, "prices"], async (api) => fromApi<PriceWatch>(await api(restaurantPaths.prices()))),
+  laborActuals: (branchId: number, week: string) =>
+    defineQuery<LaborActuals>([...RESTAURANT_KEY, "labor-actuals", branchId, week], async (api) =>
+      fromApi<LaborActuals>(await api(restaurantPaths.laborActuals(branchId, week))),
+    ),
+  development: () =>
+    defineQuery<DevelopmentData>([...RESTAURANT_KEY, "development"], async (api) =>
+      fromApi<DevelopmentData>(await api(restaurantPaths.development())),
     ),
   marketplaces: () =>
     defineQuery<MarketplaceConnection[]>([...RESTAURANT_KEY, "marketplaces"], async (api) =>

@@ -44,6 +44,7 @@ import {
   UtensilsCrossed,
   Wallet,
   Warehouse,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -107,6 +108,8 @@ export const navItems: NavItem[] = [
   { title: "Loyalty & Gift Cards", href: "/loyalty", icon: Gift, enabled: true },
   // SPEC-394: the crew, the clock, the schedule, inventory and food cost.
   { title: "Back Office", href: "/back-office", icon: Warehouse, enabled: true },
+  // SPEC-395 (backend SPEC-416): prospects to franchisees, openings to branches.
+  { title: "Franchise Development", href: "/development", icon: Building2, enabled: true },
   { title: "Operations", href: "/operations", icon: Timer, enabled: true },
   { title: "Guests", href: "/guests", icon: UserRound, enabled: true },
   { title: "Royalties", href: "/royalties", icon: HandCoins, enabled: true },

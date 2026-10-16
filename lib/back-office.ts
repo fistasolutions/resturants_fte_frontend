@@ -1,5 +1,5 @@
 /** The back office's pure half (frontend SPEC-394 / backend SPEC-414/415). */
-import type { CrewRole } from "@/types/restaurant-os";
+import type { CrewRole, WasteReason } from "@/types/restaurant-os";
 
 export const BACK_OFFICE_TABS = ["clock", "schedule", "inventory"] as const;
 export type BackOfficeTab = (typeof BACK_OFFICE_TABS)[number];
@@ -55,3 +55,16 @@ export function addPlanned(rows: PlannedDraft[], row: PlannedDraft): PlannedDraf
   if (rows.some((r) => r.staffId === row.staffId && r.day === row.day && r.start === row.start)) return rows;
   return [...rows, row].sort((a, b) => (a.day + a.start).localeCompare(b.day + b.start));
 }
+
+export const WASTE_REASON_LABELS: Record<WasteReason, string> = {
+  expired: "Expired",
+  dropped: "Dropped",
+  overcooked: "Overcooked",
+  returned: "Sent back",
+  other: "Other",
+};
+
+export const OVERTIME_LABELS: Record<"over" | "near", string> = {
+  over: "Overtime",
+  near: "Near 40 h",
+};

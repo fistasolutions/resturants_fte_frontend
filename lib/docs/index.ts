@@ -28,6 +28,7 @@ import { menuEngineerDoc } from "@/lib/docs/content/menu-engineer";
 import { cateringDoc } from "@/lib/docs/content/catering";
 import { standardsDoc } from "@/lib/docs/content/standards";
 import { backOfficeDoc } from "@/lib/docs/content/back-office";
+import { developmentDoc } from "@/lib/docs/content/development";
 import { loyaltyDoc } from "@/lib/docs/content/loyalty";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
@@ -79,6 +80,7 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   cateringDoc,
   standardsDoc,
   backOfficeDoc,
+  developmentDoc,
   productsDoc,
   menuDoc,
   dataManagerDoc,

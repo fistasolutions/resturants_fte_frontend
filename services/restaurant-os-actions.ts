@@ -25,6 +25,11 @@ import type {
   ClockShift,
   ScheduleWeek,
   Ingredient,
+  WasteReason,
+  Prospect,
+  ProspectStage,
+  Opening,
+  OpeningStage,
   MarketplaceConnection,
   MarketplaceProvider,
   MarketplaceSecret,
@@ -494,6 +499,41 @@ export function recordDelivery(
     },
     "Saving the delivery failed",
   );
+}
+
+export function logWaste(branchId: number, loggedOn: string, itemId: number, quantity: number, reason: WasteReason): Promise<unknown> {
+  return send(
+    "POST",
+    `/restaurant/branches/${branchId}/inventory/waste`,
+    { logged_on: loggedOn, item_id: itemId, quantity, reason },
+    "Logging the waste failed",
+  );
+}
+
+// ── franchise development (SPEC-395 / backend SPEC-416) ───────────────────────
+
+export function addProspect(prospect: { name: string; market: string; email: string | null; phone: string | null; nextStep: string | null; nextStepOn: string | null }): Promise<Prospect> {
+  return send("POST", "/restaurant/development/prospects", toApi(prospect), "Adding the prospect failed");
+}
+
+export function updateProspect(id: number, change: { stage?: ProspectStage; nextStep?: string | null; nextStepOn?: string | null }): Promise<Prospect> {
+  return send("PATCH", `/restaurant/development/prospects/${id}`, toApi(change), "Saving the prospect failed");
+}
+
+export function signProspect(id: number, royaltyRate: number, adFundRate: number): Promise<Prospect> {
+  return send("POST", `/restaurant/development/prospects/${id}/sign`, { royalty_rate: royaltyRate, ad_fund_rate: adFundRate }, "Signing failed");
+}
+
+export function addOpening(opening: { franchiseeId: number; prospectId: number | null; name: string; city: string | null; targetOpenOn: string | null }): Promise<Opening> {
+  return send("POST", "/restaurant/development/openings", toApi(opening), "Adding the opening failed");
+}
+
+export function updateOpening(id: number, change: { stage?: OpeningStage; targetOpenOn?: string | null }): Promise<Opening> {
+  return send("PATCH", `/restaurant/development/openings/${id}`, toApi(change), "Saving the opening failed");
+}
+
+export function openStore(id: number, code: string): Promise<Opening> {
+  return send("POST", `/restaurant/development/openings/${id}/open`, { code }, "Opening the store failed");
 }
 
 // ── marketplace connections (SPEC-393 / backend SPEC-413) ─────────────────────

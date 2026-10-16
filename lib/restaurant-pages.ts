@@ -102,6 +102,14 @@ export const BACK_OFFICE_PAGE = {
   periodTabs: [] as string[],
 } as const;
 
+export const DEVELOPMENT_PAGE = {
+  base: "/development",
+  title: "Franchise Development",
+  description: "The pipeline that grows the brand: prospects from first inquiry to a signed franchise, and new stores from site search to opening day.",
+  tabs: [] as PageTab[],
+  periodTabs: [] as string[],
+} as const;
+
 export const CASH_PAGE = {
   base: "/cash",
   title: "Cash & Day Close",
