@@ -72,6 +72,20 @@ export const REPUTATION_PAGE = {
   periodTabs: [] as string[],
 } as const;
 
+export const MENU_ENGINEER_PAGE = {
+  base: "/menu-engineer",
+  title: "Menu Engineer",
+  description: "The menu changes worth making — re-price, push, re-cost or retire — with what each is worth, one click to apply.",
+  periodTabs: [] as string[],
+} as const;
+
+export const CATERING_PAGE = {
+  base: "/catering",
+  title: "Catering Desk",
+  description: "Catering inquiries from your site, quotes priced from the branch's menu, followed to won or lost.",
+  periodTabs: [] as string[],
+} as const;
+
 export const CASH_PAGE = {
   base: "/cash",
   title: "Cash & Day Close",

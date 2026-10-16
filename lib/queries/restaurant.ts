@@ -11,6 +11,8 @@ import type {
   CashDay,
   CoachDay,
   ReputationData,
+  MenuEngineerData,
+  CateringData,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -130,6 +132,8 @@ export const restaurantPaths = {
   loyalty: (): string => "/restaurant/loyalty",
   zones: (branchId: number): string => `/restaurant/branches/${branchId}/zones`,
   coach: (date: string | null): string => `/restaurant/coach${date ? `?date=${encodeURIComponent(date)}` : ""}`,
+  menuEngineer: (days: number): string => `/restaurant/menu-engineer?days=${days}`,
+  catering: (): string => "/restaurant/catering",
   reputation: (days: number, branchId: number | null, stars: number | null): string => {
     const params = new URLSearchParams({ days: String(days) });
     if (branchId != null) params.set("branch_id", String(branchId));
@@ -284,6 +288,14 @@ export const restaurantQueries = {
   coach: (date: string | null) =>
     defineQuery<CoachDay>([...RESTAURANT_KEY, "coach", date], async (api) =>
       fromApi<CoachDay>(await api(restaurantPaths.coach(date))),
+    ),
+  menuEngineer: (days: number) =>
+    defineQuery<MenuEngineerData>([...RESTAURANT_KEY, "menu-engineer", days], async (api) =>
+      fromApi<MenuEngineerData>(await api(restaurantPaths.menuEngineer(days))),
+    ),
+  catering: () =>
+    defineQuery<CateringData>([...RESTAURANT_KEY, "catering"], async (api) =>
+      fromApi<CateringData>(await api(restaurantPaths.catering())),
     ),
   reputation: (days: number, branchId: number | null, stars: number | null) =>
     defineQuery<ReputationData>([...RESTAURANT_KEY, "reputation", days, branchId, stars], async (api) =>

@@ -14,6 +14,10 @@ import type {
   CoachDay,
   CoachEmailResult,
   ReplyState,
+  MenuEngineerData,
+  MenuSuggestionKind,
+  CateringInquiry,
+  CateringStatus,
   DeliveryZone,
   DriverLink,
   CatalogCategory,
@@ -364,6 +368,39 @@ export function dispatchRun(driverId: number, orderIds: number[]): Promise<{ ord
 
 export function runOpsCoach(date: string | null): Promise<CoachDay> {
   return send("POST", "/restaurant/coach/run", { date }, "Running the Ops Coach failed");
+}
+
+// ── the Menu Engineer and the Catering Desk (SPEC-391 / backend SPEC-409/410) ─
+
+export function decideMenuSuggestion(
+  menuItemId: number,
+  kind: MenuSuggestionKind,
+  decision: "accept" | "dismiss",
+  days: number,
+): Promise<MenuEngineerData> {
+  return send("POST", "/restaurant/menu-engineer/decide", { menu_item_id: menuItemId, kind, decision, days }, "Saving the decision failed");
+}
+
+export function updateCateringInquiry(id: number, change: { branchId?: number; status?: CateringStatus }): Promise<CateringInquiry> {
+  return send("PATCH", `/restaurant/catering/${id}`, toApi(change), "Saving the inquiry failed");
+}
+
+export function quoteCateringInquiry(
+  id: number,
+  lines: { menuItemId: number; quantity: number }[],
+  deliveryFee: number,
+  note: string | null,
+): Promise<CateringInquiry> {
+  return send(
+    "POST",
+    `/restaurant/catering/${id}/quote`,
+    { lines: lines.map((l) => ({ menu_item_id: l.menuItemId, quantity: l.quantity })), delivery_fee: deliveryFee, note },
+    "Pricing the quote failed",
+  );
+}
+
+export function sendCateringQuote(id: number): Promise<CateringInquiry> {
+  return send("POST", `/restaurant/catering/${id}/send`, undefined, "Sending the quote failed");
 }
 
 // ── the Reputation Manager (SPEC-390 / backend SPEC-408) ──────────────────────

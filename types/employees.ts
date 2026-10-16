@@ -16,7 +16,10 @@ export type EmployeeKey =
   /** SPEC-385: a restaurant brand's own employee (backend SPEC-402). */
   | "ops_coach"
   /** SPEC-390: a restaurant brand's own employee (backend SPEC-408). */
-  | "reputation";
+  | "reputation"
+  /** SPEC-391: restaurant brands' Menu Engineer and Catering Desk (backend SPEC-409/410). */
+  | "menu_engineer"
+  | "catering";
 
 export type FigureKind = "count" | "money";
 

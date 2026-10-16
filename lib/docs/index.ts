@@ -24,6 +24,8 @@ import { cashDoc } from "@/lib/docs/content/cash";
 import { kitchenDoc } from "@/lib/docs/content/kitchen";
 import { opsCoachDoc } from "@/lib/docs/content/ops-coach";
 import { reputationDoc } from "@/lib/docs/content/reputation";
+import { menuEngineerDoc } from "@/lib/docs/content/menu-engineer";
+import { cateringDoc } from "@/lib/docs/content/catering";
 import { loyaltyDoc } from "@/lib/docs/content/loyalty";
 import { inventoryDoc } from "@/lib/docs/content/inventory";
 import { menuDoc } from "@/lib/docs/content/menu";
@@ -71,6 +73,8 @@ export const FEATURE_DOCS: FeatureDoc[] = [
   reportFteDoc,
   opsCoachDoc,
   reputationDoc,
+  menuEngineerDoc,
+  cateringDoc,
   productsDoc,
   menuDoc,
   dataManagerDoc,

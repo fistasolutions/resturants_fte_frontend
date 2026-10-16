@@ -55,9 +55,11 @@ describe("characters", () => {
     expect(new Set(kinds).size).toBe(Object.keys(CHARACTERS).length);
     expect(Object.keys(CHARACTERS).sort()).toEqual([
       "ads",
+      "catering",
       "customer_support",
       "email_marketing",
       "finance",
+      "menu_engineer",
       "ops_coach",
       "report-fte",
       "reputation",

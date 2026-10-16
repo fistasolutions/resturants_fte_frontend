@@ -58,6 +58,46 @@ export async function ratePublicOrder(
   return fromApi<TrackRating>(await response.json());
 }
 
+/** SPEC-391: a catering inquiry from the brand's site. */
+export async function sendCateringInquiry(
+  slug: string,
+  inquiry: {
+    name: string;
+    email: string | null;
+    phone: string | null;
+    eventDate: string;
+    eventTime: string | null;
+    guests: number;
+    fulfilment: "delivery" | "pickup";
+    address: string | null;
+    notes: string | null;
+  },
+): Promise<{ reference: string; eventDate: string }> {
+  const response = await fetch(proxyUrl(`/storefront/${encodeURIComponent(slug)}/catering`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: inquiry.name,
+      email: inquiry.email,
+      phone: inquiry.phone,
+      event_date: inquiry.eventDate,
+      event_time: inquiry.eventTime,
+      guests: inquiry.guests,
+      fulfilment: inquiry.fulfilment,
+      address: inquiry.address,
+      notes: inquiry.notes,
+    }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: { message?: string; details?: { message: string }[] } }
+      | null;
+    const details = (payload?.error?.details ?? []).map((d) => d.message);
+    throw new StorefrontError(details.length ? details.join(" ") : (payload?.error?.message ?? "The request could not be sent."), response.status);
+  }
+  return fromApi(await response.json());
+}
+
 /** SPEC-383: what a gift card holds, by its code. A wrong code reads "No gift card with that code". */
 export async function checkPublicGiftCard(slug: string, code: string): Promise<{ balance: number; currency: string; last4: string }> {
   const response = await fetch(proxyUrl(`/storefront/${encodeURIComponent(slug)}/gift-cards/balance`), {

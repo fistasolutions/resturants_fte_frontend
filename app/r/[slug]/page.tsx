@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, ShoppingBag } from "lucide-react";
 
+import { CateringForm } from "@/features/storefront/catering-form";
 import { publicGet, siteOrigin } from "@/lib/public-api";
 import type { PublicLocations } from "@/types/local-pages";
 
@@ -68,6 +69,11 @@ export default async function LocationsPage({ params }: Props) {
             ))}
           </ul>
         )}
+        <section id="catering" className="space-y-3 pt-4">
+          <h2 className="text-xl font-semibold tracking-tight">Catering</h2>
+          <p className="text-muted-foreground">Feeding a team, a party or a school? Tell us about it and we will send a quote.</p>
+          <CateringForm slug={data.slug} />
+        </section>
       </div>
     </main>
   );

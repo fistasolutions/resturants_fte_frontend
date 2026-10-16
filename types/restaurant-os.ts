@@ -808,3 +808,74 @@ export interface TrackRating {
   tags: RatingTag[];
   comment: string | null;
 }
+
+// ── the Menu Engineer and the Catering Desk (SPEC-391 / backend SPEC-409/410) ─
+
+export type MenuSuggestionKind = "reprice" | "retire" | "promote" | "recost";
+
+export interface MenuSuggestion {
+  menuItemId: number;
+  name: string;
+  category: string;
+  kind: MenuSuggestionKind;
+  class: string;
+  text: string;
+  units: number;
+  price: number;
+  foodCostPct: number | null;
+  newPrice: number | null;
+  worth: number | null;
+}
+
+export interface MenuEngineerData {
+  period: { from: string; to: string };
+  suggestions: MenuSuggestion[];
+  counts: Record<MenuSuggestionKind, number>;
+  worth: number;
+  decisions: {
+    id: number;
+    menuItemId: number;
+    name: string;
+    kind: MenuSuggestionKind;
+    status: "accepted" | "dismissed";
+    oldPrice: number | null;
+    newPrice: number | null;
+    decidedBy: string;
+    createdAt: string | null;
+  }[];
+}
+
+export type CateringStatus = "new" | "quoted" | "won" | "lost";
+
+export interface CateringQuoteLine {
+  menuItemId: number;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface CateringInquiry {
+  id: number;
+  branchId: number | null;
+  branch: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  eventDate: string;
+  eventTime: string | null;
+  guests: number;
+  fulfilment: "delivery" | "pickup";
+  address: string | null;
+  notes: string | null;
+  status: CateringStatus;
+  quote: { lines: CateringQuoteLine[]; subtotal: number; deliveryFee: number; total: number; note: string | null };
+  quotedAt: string | null;
+  decidedAt: string | null;
+  createdAt: string | null;
+}
+
+export interface CateringData {
+  inquiries: CateringInquiry[];
+  counts: Record<CateringStatus, number>;
+}

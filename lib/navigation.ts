@@ -10,6 +10,8 @@ import {
   ChefHat,
   ClipboardCheck,
   Star,
+  Scale,
+  ConciergeBell,
   ClipboardList,
   Database,
   FileText,
@@ -114,6 +116,9 @@ export const navItems: NavItem[] = [
   { title: "Ops Coach", href: "/ops-coach", icon: ClipboardCheck, enabled: true, within: "/employees" },
   // SPEC-390 (backend SPEC-408): guests' ratings and the replies to them.
   { title: "Reputation Manager", href: "/reputation", icon: Star, enabled: true, within: "/employees" },
+  // SPEC-391 (backend SPEC-409/410): the menu's tuner and the catering desk.
+  { title: "Menu Engineer", href: "/menu-engineer", icon: Scale, enabled: true, within: "/employees" },
+  { title: "Catering Desk", href: "/catering", icon: ConciergeBell, enabled: true, within: "/employees" },
   { title: "Product Analyst", href: "/products", icon: Package, enabled: true },
   { title: "Inventory Analyst", href: "/inventory", icon: Boxes, enabled: true },
   // Raw order browsing + the report drill-down target (SPEC-039; owner

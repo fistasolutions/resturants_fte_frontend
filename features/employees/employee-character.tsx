@@ -162,6 +162,21 @@ function Hair({ kind }: { kind: CharacterKind }) {
           <path d="M35 36 Q64 26 93 36 L93 42 Q64 32 35 42 Z" fill={ACCENT} stroke={STROKE} strokeWidth={1.8} />
         </>
       );
+    case "menu":
+      // A chef's toque (SPEC-391).
+      return (
+        <>
+          <path d="M40 40 Q38 24 50 22 Q54 10 64 12 Q74 10 78 22 Q90 24 88 40 Z" fill={FILL} stroke={STROKE} strokeWidth={2.2} />
+          <rect x={42} y={36} width={44} height={8} rx={2} fill={FILL} stroke={STROKE} strokeWidth={2.2} />
+        </>
+      );
+    case "cloche":
+      // Short curls (SPEC-391).
+      return (
+        <>
+          <path d="M37 42 Q36 22 64 20 Q92 22 91 42 Q86 34 78 34 Q74 28 64 30 Q54 28 50 34 Q42 34 37 42 Z" fill={STROKE} />
+        </>
+      );
     case "star":
       // A side-swept bob (SPEC-390).
       return (
@@ -268,6 +283,24 @@ function Prop({ kind }: { kind: CharacterKind }) {
             <path d="M110 26 L110 16" stroke={ACCENT} strokeWidth={2.4} strokeLinecap="round" />
           </g>
           <circle cx={110} cy={26} r={2} fill={STROKE} />
+        </g>
+      );
+    case "menu":
+      // SPEC-391: a menu card whose highlighted line moves while the card is active.
+      return (
+        <g className="emp-prop emp-prop-menu">
+          <rect x={98} y={6} width={24} height={32} rx={3} fill={FILL} stroke={STROKE} strokeWidth={2.2} />
+          <path d="M103 14 H117 M103 20 H117 M103 26 H113" stroke={STROKE} strokeWidth={1.8} strokeLinecap="round" />
+          <circle className="emp-dot" cx={103} cy={32} r={2} fill={ACCENT} />
+        </g>
+      );
+    case "cloche":
+      // SPEC-391: a serving cloche, its knob catching the light while the card is active.
+      return (
+        <g className="emp-prop emp-prop-cloche">
+          <path d="M96 32 Q96 14 110 14 Q124 14 124 32 Z" fill={FILL} stroke={STROKE} strokeWidth={2.2} strokeLinejoin="round" />
+          <path d="M92 34 H128" stroke={STROKE} strokeWidth={2.6} strokeLinecap="round" />
+          <circle className="emp-dot" cx={110} cy={11} r={2.6} fill={ACCENT} stroke={STROKE} strokeWidth={1.4} />
         </g>
       );
     case "star":

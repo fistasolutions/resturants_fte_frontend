@@ -77,6 +77,9 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   "/ops-coach": [],
   // SPEC-390: the Reputation Manager is one screen.
   "/reputation": [],
+  // SPEC-391: one screen each.
+  "/menu-engineer": [],
+  "/catering": [],
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };
