@@ -177,6 +177,13 @@ function Hair({ kind }: { kind: CharacterKind }) {
           <path d="M37 42 Q36 22 64 20 Q92 22 91 42 Q86 34 78 34 Q74 28 64 30 Q54 28 50 34 Q42 34 37 42 Z" fill={STROKE} />
         </>
       );
+    case "shield":
+      // A neat side part (SPEC-392).
+      return (
+        <>
+          <path d="M37 42 Q37 21 62 20 Q90 20 91 42 Q84 30 70 29 L66 34 Q52 28 37 42 Z" fill={STROKE} />
+        </>
+      );
     case "star":
       // A side-swept bob (SPEC-390).
       return (
@@ -301,6 +308,15 @@ function Prop({ kind }: { kind: CharacterKind }) {
           <path d="M96 32 Q96 14 110 14 Q124 14 124 32 Z" fill={FILL} stroke={STROKE} strokeWidth={2.2} strokeLinejoin="round" />
           <path d="M92 34 H128" stroke={STROKE} strokeWidth={2.6} strokeLinecap="round" />
           <circle className="emp-dot" cx={110} cy={11} r={2.6} fill={ACCENT} stroke={STROKE} strokeWidth={1.4} />
+        </g>
+      );
+    case "shield":
+      // SPEC-392: a standards shield with a tick, its dot blinking while the card is active.
+      return (
+        <g className="emp-prop emp-prop-shield">
+          <path d="M110 6 L124 11 V22 Q124 34 110 40 Q96 34 96 22 V11 Z" fill={FILL} stroke={STROKE} strokeWidth={2.2} strokeLinejoin="round" />
+          <path d="M103 22 L108 27 L118 16" fill="none" stroke={ACCENT} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+          <circle className="emp-dot" cx={124} cy={6} r={2.2} fill={STROKE} />
         </g>
       );
     case "star":

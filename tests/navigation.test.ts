@@ -35,7 +35,7 @@ describe("the sidebar and its hubs (SPEC-290)", () => {
 
   it("keeps the employees as destinations, entered through the hub", () => {
     const within = itemsWithin("/employees").map((item) => item.href);
-    expect(within).toEqual(["/spotlight", "/social", "/ads", "/email-marketing", "/customer-support", "/data-manager", "/report-fte", "/ops-coach", "/reputation", "/menu-engineer", "/catering"]);
+    expect(within).toEqual(["/spotlight", "/social", "/ads", "/email-marketing", "/customer-support", "/data-manager", "/report-fte", "/ops-coach", "/reputation", "/menu-engineer", "/catering", "/standards"]);
     for (const item of navItems) {
       if (item.within) expect(navItems.some((hub) => hub.href === item.within && !hub.within)).toBe(true);
     }
@@ -75,6 +75,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
       ["Reputation Manager", "/reputation"],
       ["Menu Engineer", "/menu-engineer"],
       ["Catering Desk", "/catering"],
+      ["Brand Standards", "/standards"],
     ]);
   });
 
@@ -109,6 +110,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
       "/reputation",
       "/menu-engineer",
       "/catering",
+      "/standards",
     ]);
   });
 
@@ -120,7 +122,7 @@ describe("the Digital Employees dropdown (SPEC-329)", () => {
   });
 
   it("hides nothing when the workspace says nothing", () => {
-    expect(visibleItems(hubChildren("/employees"), null)).toHaveLength(12);
+    expect(visibleItems(hubChildren("/employees"), null)).toHaveLength(13);
   });
 
   it("highlights only the employee being viewed", () => {

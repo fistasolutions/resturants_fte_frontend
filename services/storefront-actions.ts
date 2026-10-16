@@ -5,7 +5,7 @@
 import { proxyUrl } from "@/lib/client-api";
 import { fromApi } from "@/lib/restaurant-api";
 import { orderBody } from "@/lib/restaurant-os";
-import type { OrderInput, OrderQuote, PlacedOrder, TrackRating } from "@/types/restaurant-os";
+import type { OrderInput, OrderQuote, OrderTakerAnswer, OrderTakerTurn, PlacedOrder, TrackRating } from "@/types/restaurant-os";
 
 export class StorefrontError extends Error {
   constructor(
@@ -56,6 +56,23 @@ export async function ratePublicOrder(
     throw new StorefrontError(payload?.error?.message ?? "The rating could not be saved.", response.status);
   }
   return fromApi<TrackRating>(await response.json());
+}
+
+/** SPEC-392: one turn with the Order Taker; the browser keeps the conversation. */
+export async function chatOrderTaker(slug: string, branchId: number, messages: OrderTakerTurn[]): Promise<OrderTakerAnswer> {
+  const response = await fetch(proxyUrl(`/storefront/${encodeURIComponent(slug)}/order-taker`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ branch_id: branchId, messages }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: { message?: string; details?: { message: string }[] } }
+      | null;
+    const details = (payload?.error?.details ?? []).map((d) => d.message);
+    throw new StorefrontError(details.length ? details.join(" ") : (payload?.error?.message ?? "The chat is unavailable."), response.status);
+  }
+  return fromApi<OrderTakerAnswer>(await response.json());
 }
 
 /** SPEC-391: a catering inquiry from the brand's site. */

@@ -18,6 +18,8 @@ import type {
   MenuSuggestionKind,
   CateringInquiry,
   CateringStatus,
+  AuditResult,
+  QscAudit,
   DeliveryZone,
   DriverLink,
   CatalogCategory,
@@ -401,6 +403,24 @@ export function quoteCateringInquiry(
 
 export function sendCateringQuote(id: number): Promise<CateringInquiry> {
   return send("POST", `/restaurant/catering/${id}/send`, undefined, "Sending the quote failed");
+}
+
+// ── Brand Standards and the Order Taker (SPEC-392 / backend SPEC-411/412) ─────
+
+export function recordAudit(
+  branchId: number,
+  visitedOn: string,
+  answers: Record<string, { result: AuditResult; note: string | null }>,
+): Promise<QscAudit> {
+  return send("POST", "/restaurant/audits", { branch_id: branchId, visited_on: visitedOn, answers }, "Saving the visit failed");
+}
+
+export function closeAuditAction(auditId: number, key: string): Promise<QscAudit> {
+  return send("POST", `/restaurant/audits/${auditId}/actions/${encodeURIComponent(key)}/done`, undefined, "Closing the action failed");
+}
+
+export function setOrderTaker(enabled: boolean): Promise<{ enabled: boolean }> {
+  return send("PUT", "/restaurant/order-taker", { enabled }, "Saving the switch failed");
 }
 
 // ── the Reputation Manager (SPEC-390 / backend SPEC-408) ──────────────────────

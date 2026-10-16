@@ -86,6 +86,13 @@ export const CATERING_PAGE = {
   periodTabs: [] as string[],
 } as const;
 
+export const STANDARDS_PAGE = {
+  base: "/standards",
+  title: "Brand Standards",
+  description: "QSC visits scored against the brand's checklist, the actions each failure creates, and the branches overdue a visit.",
+  periodTabs: [] as string[],
+} as const;
+
 export const CASH_PAGE = {
   base: "/cash",
   title: "Cash & Day Close",

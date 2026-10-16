@@ -19,7 +19,9 @@ export type EmployeeKey =
   | "reputation"
   /** SPEC-391: restaurant brands' Menu Engineer and Catering Desk (backend SPEC-409/410). */
   | "menu_engineer"
-  | "catering";
+  | "catering"
+  /** SPEC-392: restaurant brands' Brand Standards (backend SPEC-411). */
+  | "brand_standards";
 
 export type FigureKind = "count" | "money";
 

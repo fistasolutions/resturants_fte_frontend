@@ -12,6 +12,7 @@ import {
   Star,
   Scale,
   ConciergeBell,
+  ShieldCheck,
   ClipboardList,
   Database,
   FileText,
@@ -119,6 +120,8 @@ export const navItems: NavItem[] = [
   // SPEC-391 (backend SPEC-409/410): the menu's tuner and the catering desk.
   { title: "Menu Engineer", href: "/menu-engineer", icon: Scale, enabled: true, within: "/employees" },
   { title: "Catering Desk", href: "/catering", icon: ConciergeBell, enabled: true, within: "/employees" },
+  // SPEC-392 (backend SPEC-411): QSC audits.
+  { title: "Brand Standards", href: "/standards", icon: ShieldCheck, enabled: true, within: "/employees" },
   { title: "Product Analyst", href: "/products", icon: Package, enabled: true },
   { title: "Inventory Analyst", href: "/inventory", icon: Boxes, enabled: true },
   // Raw order browsing + the report drill-down target (SPEC-039; owner

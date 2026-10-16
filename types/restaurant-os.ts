@@ -387,6 +387,8 @@ export interface PublicBrand {
   slug: string;
   currency: string;
   branches: PublicBranch[];
+  /** SPEC-392: whether the Order Taker chat is offered. */
+  orderTaker?: boolean;
 }
 
 export interface PublicMenu {
@@ -878,4 +880,61 @@ export interface CateringInquiry {
 export interface CateringData {
   inquiries: CateringInquiry[];
   counts: Record<CateringStatus, number>;
+}
+
+// ── Brand Standards and the Order Taker (SPEC-392 / backend SPEC-411/412) ────
+
+export type AuditResult = "pass" | "fail" | "not_seen";
+
+export interface AuditPoint {
+  key: string;
+  section: "quality" | "service" | "cleanliness";
+  sectionLabel: string;
+  text: string;
+}
+
+export interface AuditAction {
+  key: string;
+  text: string;
+  dueOn: string;
+  doneAt: string | null;
+  doneBy: string | null;
+}
+
+export interface QscAudit {
+  id: number;
+  branchId: number;
+  branch: string;
+  auditor: string;
+  visitedOn: string;
+  score: number | null;
+  grade: string | null;
+  sectionScores: Record<string, number | null>;
+  answers: Record<string, { result: AuditResult; note: string | null }>;
+  actions: AuditAction[];
+  openActions: number;
+  createdAt: string | null;
+}
+
+export interface AuditsData {
+  checklist: AuditPoint[];
+  audits: QscAudit[];
+  branches: { branchId: number; branch: string; lastVisit: string | null; daysSince: number | null; score: number | null; grade: string | null; overdue: boolean }[];
+  openActions: (AuditAction & { auditId: number; branchId: number; branch: string; overdue: boolean })[];
+}
+
+export interface OrderTakerTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface OrderTakerProposal {
+  lines: { itemId: number; sizeId: number | null; quantity: number; modifiers: { optionId: number }[] }[];
+  channel: "carryout" | "delivery";
+}
+
+export interface OrderTakerAnswer {
+  reply: string;
+  cart: OrderTakerProposal | null;
+  quote: { lines: { name: string; quantity: number; lineTotal: number; modifiers: { name?: string }[] }[]; subtotal: number; total?: number; errors?: { message: string }[] } | null;
 }

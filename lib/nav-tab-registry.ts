@@ -80,6 +80,8 @@ export const PAGE_TABS: Readonly<Record<string, readonly NavTab[]>> = {
   // SPEC-391: one screen each.
   "/menu-engineer": [],
   "/catering": [],
+  // SPEC-392: one screen.
+  "/standards": [],
   "/operations": OPERATIONS_TABS.map((key) => ({ key, label: OPERATIONS_TAB_LABELS[key] })),
   "/employees/finance": FINANCE_TAB_IDS.map((key) => ({ key, label: financeTabLabel(key) })),
 };

@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { FormError, RestaurantSkeleton } from "@/features/restaurant/parts";
 import { useApiQuery } from "@/hooks/use-api-query";
+import { useCan } from "@/hooks/use-can";
 import { RESTAURANT_KEY, restaurantQueries } from "@/lib/queries/restaurant";
 import { WEEKDAY_NAMES } from "@/lib/restaurant";
 import { saveRestaurantSettings } from "@/services/restaurant-actions";
+import { setOrderTaker } from "@/services/restaurant-os-actions";
 import type { RestaurantRules } from "@/types/restaurant";
 
 function Form({ rules }: { rules: RestaurantRules }) {
@@ -104,9 +106,60 @@ function Form({ rules }: { rules: RestaurantRules }) {
 }
 
 /** Network › Settings (SPEC-378 over backend SPEC-390): the brand's rules, head office only. */
+/** SPEC-392: the Order Taker chat on the brand's ordering page — off until head office turns it on. */
+function OrderTakerSwitch() {
+  const queryClient = useQueryClient();
+  const query = useApiQuery(restaurantQueries.orderTaker());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!query.data) return null;
+  const toggle = async (enabled: boolean) => {
+    setBusy(true);
+    setError(null);
+    try {
+      queryClient.setQueryData([...RESTAURANT_KEY, "order-taker"], await setOrderTaker(enabled));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Saving failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="max-w-2xl space-y-2 rounded-2xl border border-border bg-card p-6">
+      <div className="flex items-start justify-between gap-4">
+        <span>
+          <span className="block text-sm font-medium text-foreground">Order by chat</span>
+          <span className="block text-sm text-muted-foreground">
+            Guests can tell the Order Taker what they want on your ordering page. It builds the order from the branch&apos;s menu and
+            prices it; the guest checks out as usual.
+          </span>
+        </span>
+        <RoleGateSwitch checked={query.data.enabled} disabled={busy} onChange={(v) => void toggle(v)} />
+      </div>
+      <FormError message={error} />
+    </section>
+  );
+}
+
+function RoleGateSwitch({ checked, disabled, onChange }: { checked: boolean; disabled: boolean; onChange: (v: boolean) => void }) {
+  const can = useCan();
+  const gate = can(["network.manage"]);
+  return (
+    <span className="flex flex-col items-end gap-1">
+      <Switch aria-label="Order by chat" checked={checked} disabled={disabled || !gate.allowed} onCheckedChange={onChange} />
+      {!gate.allowed ? <span className="text-xs text-muted-foreground">{gate.reason}</span> : null}
+    </span>
+  );
+}
+
 export function BrandSettingsTab() {
   const query = useApiQuery(restaurantQueries.settings());
   if (query.isError) return <QueryErrorState error={query.error} onRetry={() => void query.refetch()} />;
   if (!query.data) return <RestaurantSkeleton tiles={0} />;
-  return <Form rules={query.data} />;
+  return (
+    <div className="space-y-4">
+      <Form rules={query.data} />
+      <OrderTakerSwitch />
+    </div>
+  );
 }

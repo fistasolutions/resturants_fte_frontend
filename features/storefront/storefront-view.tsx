@@ -15,6 +15,7 @@ import { FormError } from "@/features/restaurant/parts";
 import { CartPanel } from "@/features/restaurant-os/cart-panel";
 import { ItemBuilder } from "@/features/restaurant-os/item-builder";
 import { currentAttribution, rememberAttribution } from "@/features/storefront/attribution-store";
+import { OrderTakerChat } from "@/features/storefront/order-taker-chat";
 import { usePublicQuery } from "@/features/storefront/use-public-query";
 import { storefrontQueries } from "@/lib/queries/storefront";
 import { quoteKeyLines } from "@/lib/restaurant-os";
@@ -463,6 +464,9 @@ export function StorefrontView({ slug }: { slug: string }) {
               <Button className="w-full" disabled={lines.length === 0} onClick={() => setCheckout(true)}>
                 Checkout
               </Button>
+              {brand.data?.orderTaker ? (
+                <OrderTakerChat slug={slug} branchId={branch.id} onUse={(more) => setLines((cur) => [...cur, ...more])} />
+              ) : null}
             </>
           )}
         </aside>

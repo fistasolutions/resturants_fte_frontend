@@ -13,6 +13,7 @@ import type {
   ReputationData,
   MenuEngineerData,
   CateringData,
+  AuditsData,
   Catalog,
   DayOrders,
   DeliveryZone,
@@ -134,6 +135,8 @@ export const restaurantPaths = {
   coach: (date: string | null): string => `/restaurant/coach${date ? `?date=${encodeURIComponent(date)}` : ""}`,
   menuEngineer: (days: number): string => `/restaurant/menu-engineer?days=${days}`,
   catering: (): string => "/restaurant/catering",
+  audits: (branchId: number | null): string => `/restaurant/audits${branchId != null ? `?branch_id=${branchId}` : ""}`,
+  orderTaker: (): string => "/restaurant/order-taker",
   reputation: (days: number, branchId: number | null, stars: number | null): string => {
     const params = new URLSearchParams({ days: String(days) });
     if (branchId != null) params.set("branch_id", String(branchId));
@@ -292,6 +295,14 @@ export const restaurantQueries = {
   menuEngineer: (days: number) =>
     defineQuery<MenuEngineerData>([...RESTAURANT_KEY, "menu-engineer", days], async (api) =>
       fromApi<MenuEngineerData>(await api(restaurantPaths.menuEngineer(days))),
+    ),
+  audits: (branchId: number | null) =>
+    defineQuery<AuditsData>([...RESTAURANT_KEY, "audits", branchId], async (api) =>
+      fromApi<AuditsData>(await api(restaurantPaths.audits(branchId))),
+    ),
+  orderTaker: () =>
+    defineQuery<{ enabled: boolean }>([...RESTAURANT_KEY, "order-taker"], async (api) =>
+      fromApi<{ enabled: boolean }>(await api(restaurantPaths.orderTaker())),
     ),
   catering: () =>
     defineQuery<CateringData>([...RESTAURANT_KEY, "catering"], async (api) =>
