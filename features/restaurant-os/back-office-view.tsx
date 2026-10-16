@@ -302,6 +302,37 @@ function ScheduleTab({ branchId }: { branchId: number }) {
               </li>
             ))}
           </ul>
+          {actuals.data.dayparts?.some((d) => d.hours > 0) ? (
+            <div className="overflow-x-auto border-t border-border">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Labor by daypart</caption>
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-4 py-2 font-semibold">Daypart</th>
+                    <th className="px-4 py-2 text-right font-semibold">Worked</th>
+                    <th className="px-4 py-2 text-right font-semibold">Labor</th>
+                    <th className="px-4 py-2 text-right font-semibold">Sales</th>
+                    <th className="px-4 py-2 text-right font-semibold">Labor %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {actuals.data.dayparts.map((d) => (
+                    <tr key={d.key}>
+                      <td className="px-4 py-2">
+                        <span className="font-medium">{d.label}</span> <span className="text-muted-foreground">{d.hoursRange}</span>
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums">{d.hours.toFixed(1)} h</td>
+                      <td className="px-4 py-2 text-right tabular-nums">{formatCurrency(d.cost)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums">{formatCurrency(d.netSales)}</td>
+                      <td className="px-4 py-2 text-right tabular-nums">
+                        {d.high ? <Badge variant="destructive">{pct(d.laborShare)}</Badge> : pct(d.laborShare)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
           {actuals.data.people.length ? (
             <ul className="flex flex-wrap gap-2 border-t border-border p-4 text-sm">
               {actuals.data.people.map((p) => (

@@ -1102,6 +1102,19 @@ export interface LaborActuals {
   week: string;
   days: { day: string; plannedHours: number; plannedCost: number; actualHours: number; actualCost: number; differenceHours: number }[];
   people: { staffId: number; name: string; hours: number; state: "over" | "near" | "ok" }[];
+  /** SPEC-397 (backend SPEC-418): worked hours and cost by daypart against that daypart's sales. */
+  dayparts?: LaborDaypart[];
+}
+
+export interface LaborDaypart {
+  key: string;
+  label: string;
+  hoursRange: string;
+  hours: number;
+  cost: number;
+  netSales: number;
+  laborShare: number | null;
+  high: boolean;
 }
 
 export type WasteReason = "expired" | "dropped" | "overcooked" | "returned" | "other";
